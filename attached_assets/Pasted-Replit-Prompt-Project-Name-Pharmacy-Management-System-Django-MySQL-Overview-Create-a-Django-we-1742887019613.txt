@@ -1,0 +1,302 @@
+Replit Prompt
+Project Name: Pharmacy Management System (Django + MySQL)
+
+Overview
+Create a Django web application that helps manage a pharmacy’s daily operations. The application will handle drug stock tracking, sales reporting, invoicing, patient profiles, drug interaction checks, and user authentication/authorization with multiple roles. It should be designed for both small-scale operation and future scalability.
+
+Features & Requirements
+Django + MySQL Setup
+
+Use Django as the main web framework.
+
+Use MySQL as the relational database.
+
+Make sure to configure the DATABASES settings in settings.py to connect to MySQL.
+
+In Replit, we’ll store environment variables (like database username/password) in the “Secrets” or .env file.
+
+User Authentication & Roles
+
+Implement user login, logout, and password management.
+
+Create multiple roles (e.g., Admin, Pharmacist, Sales Clerk, Manager).
+
+Use Django’s built-in authentication system plus a role/permission model (e.g., django.contrib.auth.models.Group or a custom solution).
+
+Enforce role-based access control (RBAC). For example:
+
+Admin can add/remove users, manage all data.
+
+Pharmacist can manage drug inventory, handle sales, run interaction checks.
+
+Sales Clerk can process sales but only see limited inventory info.
+
+Manager can view reports, track performance, but not necessarily modify all data.
+
+Drug Management / Inventory
+
+Stock Tracking: Each drug entry in the database should have a name, brand, quantity, cost price, selling price, expiry date, reorder level (for low-stock notifications), and other relevant details.
+
+Drug Entry: Provide a form to add and update drugs.
+
+Low-Stock Notification: If the stock reaches a certain threshold or reorder level, flag it on the dashboard. (Future expansion: add email/SMS notifications.)
+
+Expiry Check: Display a warning in the dashboard when a drug is within 2 months of expiry.
+
+Sales Module
+
+Sales Entry: Enable creation of sales records. The user can select a patient, the drugs being dispensed, and quantity.
+
+Drug Interaction Check: On the sales page (checkout point), check if there’s a potential interaction between the drugs in the transaction and/or the patient’s medication history.
+
+For now, store basic interaction data in your system or keep placeholders to integrate an external API/dataset later.
+
+If an interaction is found, display an alert and require the pharmacist to confirm or override.
+
+Invoicing: Generate an invoice for the sale with patient details, list of drugs dispensed, total amount, and date/time.
+
+Audit Log: Record all inventory changes and sales. Show who changed what and when.
+
+Patient Profiles
+
+Collect patient data: name, age, sex, blood type, disease history, medication history.
+
+Allow editing/updating patient details, linking them to sales transactions.
+
+Reports
+
+Monthly Sales Report: Automatically generate a summary for each month (units sold, revenue, etc.).
+
+Custom Date Range: Allow users to generate sales reports for any date range.
+
+Export: Provide the ability to export these reports to PDF and Excel (XLSX/CSV).
+
+A dedicated “Reports” section in the dashboard for these features.
+
+Front End (Material Design & Responsive)
+
+Use a Material Design CSS/JS library (e.g., MaterializeCSS, or a lightweight Material Design framework).
+
+Ensure responsiveness for both mobile and desktop usage.
+
+Notifications & Scheduled Checks
+
+For low-stock items and near-expiry drugs, create a mechanism that runs checks on a set schedule (daily or weekly).
+
+Display notifications on the dashboard or a dedicated “Notifications” page.
+
+Keep the structure flexible so that email or SMS alerts can be added later.
+
+Security & SSL
+
+Enforce HTTPS (SSL/TLS) in production.
+
+Use Django’s standard security features: CSRF protection, XSS protection, secure password hashing.
+
+Potentially add 2FA or other advanced methods in the future.
+
+Deployment and Local/Remote Usage
+
+For now, it should run on Replit using the built-in web server.
+
+Include notes on how to run it locally (python manage.py runserver).
+
+Keep in mind future deployment to platforms like Heroku, PythonAnywhere, AWS, etc.
+
+Scalability
+
+Design the app so it can eventually scale (use environment variables for DB credentials, separate settings for dev/prod, etc.).
+
+Use proper indexing in MySQL for faster queries as data grows.
+
+Optional Enhancements
+
+Dashboard with analytics (top-selling drugs, total revenue, low-stock summary).
+
+Search functionality for patients and drugs.
+
+Role-based analytics access (e.g., only managers see revenue charts).
+
+Directory Structure
+Use a directory structure similar to:
+
+bash
+Copy
+Edit
+pharmacy_management/
+├── manage.py
+├── requirements.txt
+├── .env                  # For environment variables in local dev
+├── pharmacy_app/         # Main Django app folder
+│   ├── migrations/
+│   ├── templates/
+│   ├── static/
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── views.py
+│   ├── urls.py
+│   └── ...
+├── pharmacy_management/   # Django project config folder
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── ...
+└── ...
+Important Files to Create
+
+pharmacy_app/models.py: Define models for Drug, Patient, Sale, Invoice, InventoryLog, Interaction, etc.
+
+pharmacy_app/views.py: Implement logic for handling requests (drug entry, sales, etc.).
+
+pharmacy_app/urls.py: Route endpoints to views.
+
+pharmacy_app/forms.py: Django forms for data validation and easy handling of user inputs.
+
+pharmacy_app/templates/*: HTML templates following Material Design guidelines.
+
+pharmacy_app/static/*: CSS, JS, images.
+
+Steps to Set Up in Replit
+Create a New Replit
+
+Language/Framework: Python
+
+Name the repl something like “pharmacy-management-system”.
+
+Install Dependencies
+
+In Replit’s “Shell” or “Package” area, install:
+
+bash
+Copy
+Edit
+pip install django mysqlclient reportlab xhtml2pdf openpyxl
+django: main framework
+
+mysqlclient: MySQL connector for Django
+
+reportlab + xhtml2pdf: for generating PDFs
+
+openpyxl: for Excel exports
+
+Initialize Django Project
+
+bash
+Copy
+Edit
+django-admin startproject pharmacy_management .
+The dot (.) ensures the files are created in the current directory.
+
+Create the Main App
+
+bash
+Copy
+Edit
+python manage.py startapp pharmacy_app
+Configure Database
+
+In pharmacy_management/settings.py, under DATABASES, configure MySQL:
+
+python
+Copy
+Edit
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'your_db_name',
+        'USER': 'your_db_user',
+        'PASSWORD': 'your_db_password',
+        'HOST': 'your_db_host',
+        'PORT': '3306',
+    }
+}
+Store sensitive credentials in Replit Secrets or an .env file and load them with os.environ.
+
+Add App to INSTALLED_APPS
+In pharmacy_management/settings.py:
+
+python
+Copy
+Edit
+INSTALLED_APPS = [
+    # ...
+    'pharmacy_app',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+Create Models
+In pharmacy_app/models.py, create models such as:
+
+Drug (name, brand, stock, reorder_level, expiry_date, cost_price, selling_price, etc.)
+
+Patient (name, age, sex, blood_type, disease_history, medication_history, etc.)
+
+Sale (patient as ForeignKey, date, total_amount, etc.)
+
+SaleItem (sale as ForeignKey, drug, quantity, price_each, etc.)
+
+InventoryLog (drug, change_in_quantity, reason, user, timestamp)
+
+Interaction (drug1, drug2, description_of_interaction, severity, etc.)
+
+Run Migrations
+
+bash
+Copy
+Edit
+python manage.py makemigrations
+python manage.py migrate
+Create Superuser
+
+bash
+Copy
+Edit
+python manage.py createsuperuser
+Setup URLs and Views
+
+In pharmacy_app/urls.py, define routes for drug management, sales, patient profiles, reports, etc.
+
+Include pharmacy_app.urls in pharmacy_management/urls.py.
+
+Templates & Static
+
+Configure the TEMPLATES and STATIC settings in settings.py.
+
+Create Material Design-based HTML templates under pharmacy_app/templates/.
+
+Testing and Debugging
+
+Run the dev server in Replit:
+
+bash
+Copy
+Edit
+python manage.py runserver 0.0.0.0:8000
+Open the “web view” to access the application.
+
+Additional Features
+
+Implement the monthly/ custom date-range sales report generation and exporting (PDF, Excel).
+
+Add a background scheduler (like django-crontab or Celery) for low-stock and near-expiry checks. (Depending on how Replit handles long-running tasks, you might use external scheduling or simply run these checks whenever an admin logs in.)
+
+Add a mechanism for drug interaction checks at the point of sale (before finalizing the sale).
+
+Add an invoice page that can be printed or saved as PDF.
+
+Security
+
+Ensure the application uses Django’s built-in security features.
+
+On production, configure SSL by setting up HTTPS on your eventual hosting provider.
+
+Use environment variables for secret keys, database credentials, etc.
+
+Conclusion
+Use the above instructions and structure to build out your Django Pharmacy Management System on Replit. The end goal is an application that can be accessed by multiple roles, manages patients and drugs, logs inventory changes, checks for interactions, and generates sales reports with export capabilities. Keep it modular so that you can expand it easily (e.g., adding real-time notifications via email/SMS) and eventually deploy to another hosting platform when you’re ready.
+
