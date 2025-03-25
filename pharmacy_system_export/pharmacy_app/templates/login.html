@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-top: 50px;">
+    <div class="col s12 m8 offset-m2 l6 offset-l3">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title center-align">Pharmacy Management System</span>
+                <div class="divider"></div>
+                <div class="section">
+                    <h5 class="center-align">Login</h5>
+                    
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        <div class="input-field">
+                            <i class="material-icons prefix">person</i>
+                            {{ form.username }}
+                            <label for="{{ form.username.id_for_label }}">Username</label>
+                            {% if form.username.errors %}
+                                <span class="red-text">{{ form.username.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field">
+                            <i class="material-icons prefix">lock</i>
+                            {{ form.password }}
+                            <label for="{{ form.password.id_for_label }}">Password</label>
+                            {% if form.password.errors %}
+                                <span class="red-text">{{ form.password.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                            <div class="card-panel red lighten-4">
+                                <span class="red-text">{{ form.non_field_errors.0 }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if error_message %}
+                            <div class="card-panel red lighten-4">
+                                <span class="red-text">{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="center-align" style="margin-top: 20px;">
+                            <button class="btn waves-effect waves-light green darken-1" type="submit">
+                                Login <i class="material-icons right">send</i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Ensure CSRF token is properly set for AJAX requests
+    $(document).ready(function() {
+        // Get the CSRF token from the cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Set up CSRF token for AJAX requests
+        const csrftoken = getCookie('csrftoken');
+        
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

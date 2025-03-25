@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<h4 class="page-title">Dashboard</h4>
+
+<!-- Quick Stats Cards -->
+<div class="row">
+    <div class="col s12 m6 l3">
+        <div class="card info-card">
+            <div class="card-content">
+                <span class="info-card-title">Total Drugs</span>
+                <p class="info-card-value">{{ drugs_count }}</p>
+                <p class="grey-text">Active medications</p>
+            </div>
+            <div class="card-action">
+                <a href="{% url 'drug_list' %}">View All</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col s12 m6 l3">
+        <div class="card info-card">
+            <div class="card-content">
+                <span class="info-card-title">Patients</span>
+                <p class="info-card-value">{{ patients_count }}</p>
+                <p class="grey-text">Registered patients</p>
+            </div>
+            <div class="card-action">
+                <a href="{% url 'patient_list' %}">View All</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col s12 m6 l3">
+        <div class="card info-card">
+            <div class="card-content">
+                <span class="info-card-title">Today's Sales</span>
+                <p class="info-card-value">${{ today_sales|floatformat:2 }}</p>
+                <p class="grey-text">Revenue today</p>
+            </div>
+            <div class="card-action">
+                <a href="{% url 'sale_list' %}">View Sales</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col s12 m6 l3">
+        <div class="card info-card">
+            <div class="card-content">
+                <span class="info-card-title">Monthly Sales</span>
+                <p class="info-card-value">${{ month_sales|floatformat:2 }}</p>
+                <p class="grey-text">Revenue this month</p>
+            </div>
+            <div class="card-action">
+                <a href="{% url 'sales_report' %}">View Report</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerts Row -->
+<div class="row">
+    <!-- Low Stock Alerts -->
+    <div class="col s12 m6">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left red-text">warning</i>
+                    Low Stock Alerts
+                </span>
+                
+                {% if low_stock_drugs %}
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Stock</th>
+                            <th>Reorder Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for drug in low_stock_drugs|slice:":5" %}
+                        <tr>
+                            <td><a href="{% url 'drug_detail' drug.id %}">{{ drug.name }}</a></td>
+                            <td class="{% if drug.stock_quantity == 0 %}red-text{% else %}orange-text{% endif %}">
+                                {{ drug.stock_quantity }}
+                            </td>
+                            <td>{{ drug.reorder_level }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No low stock items.</p>
+                {% endif %}
+            </div>
+            <div class="card-action">
+                <a href="{% url 'drug_list' %}?stock_status=low">View All Low Stock Items</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expiring Medications -->
+    <div class="col s12 m6">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left orange-text">schedule</i>
+                    Expiring Medications
+                </span>
+                
+                {% if expiring_drugs %}
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Expiry Date</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for drug in expiring_drugs|slice:":5" %}
+                        <tr>
+                            <td><a href="{% url 'drug_detail' drug.id %}">{{ drug.name }}</a></td>
+                            <td class="orange-text">{{ drug.expiry_date|date:"M d, Y" }}</td>
+                            <td>{{ drug.stock_quantity }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No medications expiring soon.</p>
+                {% endif %}
+            </div>
+            <div class="card-action">
+                <a href="{% url 'drug_list' %}?expiry_status=expiring">View All Expiring Medications</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales and Top Selling Drugs -->
+<div class="row">
+    <!-- Recent Sales -->
+    <div class="col s12 l7">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Recent Sales</span>
+                
+                {% if recent_sales %}
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Patient</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in recent_sales %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'sale_detail' sale.id %}">{{ sale.invoice_number }}</a>
+                            </td>
+                            <td>
+                                {% if sale.patient %}
+                                    <a href="{% url 'patient_detail' sale.patient.id %}">{{ sale.patient.full_name }}</a>
+                                {% else %}
+                                    Walk-in
+                                {% endif %}
+                            </td>
+                            <td>{{ sale.date|date:"M d, Y H:i" }}</td>
+                            <td>${{ sale.total_amount|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No recent sales.</p>
+                {% endif %}
+            </div>
+            <div class="card-action">
+                <a href="{% url 'sale_list' %}">View All Sales</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Selling Drugs -->
+    <div class="col s12 l5">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Top Selling Drugs (This Month)</span>
+                
+                {% if top_drugs %}
+                <div id="top-drugs-chart-container" style="height: 250px;">
+                    <canvas id="top-drugs-chart"></canvas>
+                </div>
+                {% else %}
+                <p class="center-align">No sales data available for this month.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col s12">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Quick Actions</span>
+                <div class="row" style="margin-bottom: 0;">
+                    {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' or user.profile.role == 'Sales Clerk' %}
+                    <div class="col s12 m4 center-align">
+                        <a href="{% url 'new_sale' %}" class="btn waves-effect waves-light" style="width: 100%;">
+                            <i class="material-icons left">point_of_sale</i> New Sale
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+                    <div class="col s12 m4 center-align">
+                        <a href="{% url 'drug_add' %}" class="btn waves-effect waves-light" style="width: 100%;">
+                            <i class="material-icons left">add_circle</i> Add Drug
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' or user.profile.role == 'Manager' %}
+                    <div class="col s12 m4 center-align">
+                        <a href="{% url 'patient_add' %}" class="btn waves-effect waves-light" style="width: 100%;">
+                            <i class="material-icons left">person_add</i> Add Patient
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    {% if top_drugs %}
+    // Setup chart for top drugs
+    var ctx = document.getElementById('top-drugs-chart').getContext('2d');
+    var topDrugsChart = new Chart(ctx, {
+        type: 'horizontalBar',
+        data: {
+            labels: [
+                {% for drug in top_drugs %}
+                "{{ drug.drug_name|escapejs }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Units Sold',
+                data: [
+                    {% for drug in top_drugs %}
+                    {{ drug.total_quantity }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(56, 142, 60, 0.7)',
+                borderColor: 'rgba(56, 142, 60, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                xAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

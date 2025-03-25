@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pharmacy Management System{% endblock %}</title>
+    
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        main {
+            flex: 1 0 auto;
+            padding: 20px 0;
+        }
+        
+        .sidenav {
+            width: 280px;
+            padding-top: 20px;
+        }
+        
+        .sidenav li > a {
+            padding: 0 16px;
+            font-weight: 400;
+        }
+        
+        .sidenav .logo-container {
+            padding: 0 16px 20px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 10px;
+        }
+        
+        .sidenav .logo-container .brand-logo {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #388e3c;
+        }
+        
+        .sidenav .user-view {
+            padding: 16px 16px 0;
+        }
+        
+        .badge-notify {
+            background-color: #f44336;
+            position: relative;
+            top: -8px;
+            right: 8px;
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 50%;
+        }
+        
+        .card-panel {
+            border-radius: 8px;
+        }
+        
+        .page-title {
+            font-weight: 400;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #388e3c;
+        }
+        
+        .info-card {
+            border-radius: 8px;
+            height: 100%;
+        }
+        
+        .info-card-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        
+        .info-card-value {
+            font-size: 2rem;
+            font-weight: 300;
+            margin: 10px 0;
+        }
+        
+        .btn-floating {
+            background-color: #388e3c;
+        }
+        
+        .btn {
+            background-color: #388e3c;
+        }
+        
+        .btn:hover {
+            background-color: #2e7d32;
+        }
+        
+        .secondary-btn {
+            background-color: #78909c;
+        }
+        
+        .secondary-btn:hover {
+            background-color: #607d8b;
+        }
+        
+        table.highlight > tbody > tr:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        
+        .pagination li.active {
+            background-color: #388e3c;
+        }
+        
+        .card .card-action a:not(.btn):not(.btn-large):not(.btn-small):not(.btn-large):not(.btn-floating) {
+            color: #388e3c;
+        }
+        
+        .low-stock {
+            color: #f44336;
+        }
+        
+        .expiring-soon {
+            color: #ff9800;
+        }
+        
+        .healthy-stock {
+            color: #388e3c;
+        }
+        
+        .navbar-fixed {
+            z-index: 999;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+        {% include 'navbar.html' %}
+    {% endif %}
+    
+    <main>
+        <div class="container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="card-panel {% if message.tags == 'error' %}red lighten-4{% elif message.tags == 'success' %}green lighten-4{% elif message.tags == 'warning' %}orange lighten-4{% else %}blue lighten-4{% endif %}">
+                        <span class="{% if message.tags == 'error' %}red-text{% elif message.tags == 'success' %}green-text{% elif message.tags == 'warning' %}orange-text{% else %}blue-text{% endif %}">
+                            {{ message }}
+                        </span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <footer class="page-footer green darken-1">
+        <div class="footer-copyright">
+            <div class="container">
+                © {% now "Y" %} Pharmacy Management System
+                <a class="grey-text text-lighten-4 right" href="#">About</a>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
+    <!-- Initialize Materialize components -->
+    <script>
+        $(document).ready(function(){
+            $('.sidenav').sidenav();
+            $('.dropdown-trigger').dropdown({
+                constrainWidth: false,
+                coverTrigger: false
+            });
+            $('.collapsible').collapsible();
+            $('select').formSelect();
+            $('.tooltipped').tooltip();
+            $('.datepicker').datepicker({
+                format: 'yyyy-mm-dd',
+                autoClose: true
+            });
+            $('.tabs').tabs();
+            $('.modal').modal();
+            
+            // Auto-initialize dynamic form elements that might be added later
+            function initFormElements() {
+                $('select').formSelect();
+                $('.datepicker').datepicker({
+                    format: 'yyyy-mm-dd',
+                    autoClose: true
+                });
+            }
+            
+            // Make it available globally
+            window.initFormElements = initFormElements;
+            
+            // Auto dismiss flashed messages after 5 seconds
+            setTimeout(function(){
+                $('.card-panel:has(span.red-text, span.green-text, span.orange-text, span.blue-text)').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

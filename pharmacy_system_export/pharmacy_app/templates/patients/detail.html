@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ patient.full_name }} - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <h4 class="page-title">
+            Patient Details
+            {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' or user.profile.role == 'Manager' %}
+            <a href="{% url 'patient_edit' patient.id %}" class="btn-floating right tooltipped" data-position="left" data-tooltip="Edit Patient">
+                <i class="material-icons">edit</i>
+            </a>
+            {% endif %}
+            
+            {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' or user.profile.role == 'Sales Clerk' %}
+            <a href="{% url 'new_sale' %}?patient={{ patient.id }}" class="btn-floating right tooltipped green" style="margin-right: 10px;" data-position="left" data-tooltip="New Sale for Patient">
+                <i class="material-icons">point_of_sale</i>
+            </a>
+            {% endif %}
+        </h4>
+        
+        <!-- Patient Information Card -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">{{ patient.full_name }}</span>
+                
+                <div class="row">
+                    <div class="col s12 m6">
+                        <table class="striped">
+                            <tbody>
+                                <tr>
+                                    <th>Name:</th>
+                                    <td>{{ patient.full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Age:</th>
+                                    <td>{{ patient.age }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Sex:</th>
+                                    <td>{{ patient.get_sex_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Blood Type:</th>
+                                    <td>{{ patient.blood_type }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Phone:</th>
+                                    <td>{{ patient.phone_number }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="col s12 m6">
+                        <table class="striped">
+                            <tbody>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>{{ patient.email|default:"Not provided" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Address:</th>
+                                    <td>{{ patient.address|default:"Not provided" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Registered On:</th>
+                                    <td>{{ patient.created_at|date:"F j, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Last Updated:</th>
+                                    <td>{{ patient.updated_at|date:"F j, Y" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col s12">
+                        <h5>Medical Information</h5>
+                        
+                        <div class="row">
+                            <div class="col s12 m4">
+                                <div class="card-panel">
+                                    <h6>Disease History</h6>
+                                    <p>{{ patient.disease_history|default:"No disease history recorded."|linebreaks }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="col s12 m4">
+                                <div class="card-panel">
+                                    <h6>Medication History</h6>
+                                    <p>{{ patient.medication_history|default:"No medication history recorded."|linebreaks }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="col s12 m4">
+                                <div class="card-panel">
+                                    <h6>Allergies</h6>
+                                    <p>{{ patient.allergies|default:"No allergies recorded."|linebreaks }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-action">
+                <a href="{% url 'patient_list' %}">Back to All Patients</a>
+                {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' or user.profile.role == 'Manager' %}
+                <a href="{% url 'patient_edit' patient.id %}">Edit Patient</a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Purchase History -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Purchase History</span>
+                
+                {% if sales %}
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Invoice #</th>
+                            <th>Items</th>
+                            <th>Total Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                        <tr>
+                            <td>{{ sale.date|date:"M d, Y H:i" }}</td>
+                            <td>{{ sale.invoice_number }}</td>
+                            <td>{{ sale.item_count }}</td>
+                            <td>${{ sale.total_amount|floatformat:2 }}</td>
+                            <td>
+                                <a href="{% url 'sale_detail' sale.id %}" class="btn-floating btn-small waves-effect waves-light tooltipped" data-position="top" data-tooltip="View Details">
+                                    <i class="material-icons">visibility</i>
+                                </a>
+                                <a href="{% url 'sale_invoice' sale.id %}" class="btn-floating btn-small waves-effect waves-light blue tooltipped" data-position="top" data-tooltip="View Invoice">
+                                    <i class="material-icons">receipt</i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No purchase history available for this patient.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

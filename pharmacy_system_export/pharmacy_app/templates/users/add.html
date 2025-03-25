@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Add User - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12 m8 offset-m2">
+        <h4 class="page-title">Add New User</h4>
+        
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">User Information</span>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">person</i>
+                            {{ form.username }}
+                            <label for="{{ form.username.id_for_label }}">Username</label>
+                            {% if form.username.errors %}
+                                <span class="red-text">{{ form.username.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">email</i>
+                            {{ form.email }}
+                            <label for="{{ form.email.id_for_label }}">Email</label>
+                            {% if form.email.errors %}
+                                <span class="red-text">{{ form.email.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">lock</i>
+                            {{ form.password1 }}
+                            <label for="{{ form.password1.id_for_label }}">Password</label>
+                            {% if form.password1.errors %}
+                                <span class="red-text">{{ form.password1.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">lock</i>
+                            {{ form.password2 }}
+                            <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+                            {% if form.password2.errors %}
+                                <span class="red-text">{{ form.password2.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">assignment_ind</i>
+                            {{ profile_form.role }}
+                            <label>Role</label>
+                            {% if profile_form.role.errors %}
+                                <span class="red-text">{{ profile_form.role.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="card-panel red lighten-4">
+                            <span class="red-text">{{ form.non_field_errors.0 }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col s12 center-align">
+                            <button class="btn waves-effect waves-light" type="submit">
+                                Add User <i class="material-icons right">save</i>
+                            </button>
+                            <a href="{% url 'user_list' %}" class="btn waves-effect waves-light red">
+                                Cancel <i class="material-icons right">cancel</i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Role Description Card -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Role Descriptions</span>
+                
+                <ul class="collection">
+                    <li class="collection-item">
+                        <h6>Admin</h6>
+                        <p>Full system access including user management, all reports, and system configuration.</p>
+                    </li>
+                    <li class="collection-item">
+                        <h6>Pharmacist</h6>
+                        <p>Can manage drug inventory, handle sales, run interaction checks, and access patient information.</p>
+                    </li>
+                    <li class="collection-item">
+                        <h6>Sales Clerk</h6>
+                        <p>Process sales and view limited inventory information, but cannot modify drugs or access full reports.</p>
+                    </li>
+                    <li class="collection-item">
+                        <h6>Manager</h6>
+                        <p>View reports, track performance, manage patients, but cannot modify all system data.</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

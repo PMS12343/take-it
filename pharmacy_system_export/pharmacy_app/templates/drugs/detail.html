@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ drug.name }} - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <h4 class="page-title">
+            Drug Details
+            {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+            <a href="{% url 'drug_edit' drug.id %}" class="btn-floating right tooltipped" data-position="left" data-tooltip="Edit Drug">
+                <i class="material-icons">edit</i>
+            </a>
+            {% endif %}
+        </h4>
+        
+        <!-- Drug Information Card -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">{{ drug.name }} ({{ drug.brand }})</span>
+                
+                <div class="row">
+                    <div class="col s12 m6">
+                        <table class="striped">
+                            <tbody>
+                                <tr>
+                                    <th>Name:</th>
+                                    <td>{{ drug.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Brand:</th>
+                                    <td>{{ drug.brand }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Category:</th>
+                                    <td>{{ drug.category.name|default:"Uncategorized" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Batch Number:</th>
+                                    <td>{{ drug.batch_number|default:"N/A" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td>
+                                        {% if drug.is_active %}
+                                            <span class="green-text">Active</span>
+                                        {% else %}
+                                            <span class="red-text">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="col s12 m6">
+                        <table class="striped">
+                            <tbody>
+                                <tr>
+                                    <th>Stock Quantity:</th>
+                                    <td class="{% if drug.stock_quantity == 0 %}red-text{% elif drug.is_low_stock %}orange-text{% else %}green-text{% endif %}">
+                                        {{ drug.stock_quantity }}
+                                        {% if drug.is_low_stock and drug.stock_quantity > 0 %}
+                                            <span class="orange-text">(Low Stock)</span>
+                                        {% elif drug.stock_quantity == 0 %}
+                                            <span class="red-text">(Out of Stock)</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Reorder Level:</th>
+                                    <td>{{ drug.reorder_level }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Cost Price:</th>
+                                    <td>${{ drug.cost_price|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Selling Price:</th>
+                                    <td>${{ drug.selling_price|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Expiry Date:</th>
+                                    <td class="{% if drug.is_expired %}red-text{% elif drug.is_expiring_soon %}orange-text{% endif %}">
+                                        {{ drug.expiry_date|date:"F j, Y" }}
+                                        {% if drug.is_expired %}
+                                            <span class="red-text">(Expired)</span>
+                                        {% elif drug.is_expiring_soon %}
+                                            <span class="orange-text">(Expiring Soon)</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col s12">
+                        <h5>Description</h5>
+                        <p>{{ drug.description|default:"No description available."|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-action">
+                <a href="{% url 'drug_list' %}">Back to All Drugs</a>
+                {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+                <a href="{% url 'drug_edit' drug.id %}">Edit Drug</a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Drug Interactions -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Drug Interactions</span>
+                
+                {% if interactions %}
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Interacts With</th>
+                            <th>Severity</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for interaction in interactions %}
+                        <tr>
+                            <td>
+                                {% if interaction.drug_one.id == drug.id %}
+                                    <a href="{% url 'drug_detail' interaction.drug_two.id %}">{{ interaction.drug_two.name }}</a>
+                                {% else %}
+                                    <a href="{% url 'drug_detail' interaction.drug_one.id %}">{{ interaction.drug_one.name }}</a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if interaction.severity == 'SEVERE' %}
+                                    <span class="red-text">{{ interaction.get_severity_display }}</span>
+                                {% elif interaction.severity == 'MODERATE' %}
+                                    <span class="orange-text">{{ interaction.get_severity_display }}</span>
+                                {% elif interaction.severity == 'MILD' %}
+                                    <span class="yellow-text text-darken-3">{{ interaction.get_severity_display }}</span>
+                                {% else %}
+                                    <span class="green-text">{{ interaction.get_severity_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ interaction.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No known drug interactions.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Inventory History -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Inventory History</span>
+                
+                {% if inventory_logs %}
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Change</th>
+                            <th>Operation</th>
+                            <th>Reference</th>
+                            <th>User</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in inventory_logs %}
+                        <tr>
+                            <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                            <td class="{% if log.quantity_change > 0 %}green-text{% elif log.quantity_change < 0 %}red-text{% endif %}">
+                                {% if log.quantity_change > 0 %}+{% endif %}{{ log.quantity_change }}
+                            </td>
+                            <td>{{ log.get_operation_type_display }}</td>
+                            <td>{{ log.reference|default:"N/A" }}</td>
+                            <td>{{ log.user.username|default:"System" }}</td>
+                            <td>{{ log.notes|default:"N/A" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No inventory history available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

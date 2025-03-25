@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Inventory Report - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <h4 class="page-title">
+            Inventory Report
+            <a href="{% url 'reports_index' %}" class="btn right">
+                <i class="material-icons left">arrow_back</i> Back to Reports
+            </a>
+        </h4>
+        
+        <!-- Date Range Filter -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Select Date Range for Inventory Movement</span>
+                
+                <form method="get" action="{% url 'inventory_report' %}">
+                    <div class="row">
+                        <div class="input-field col s12 m5">
+                            <i class="material-icons prefix">date_range</i>
+                            {{ form.start_date }}
+                            <label for="{{ form.start_date.id_for_label }}" {% if form.start_date.value %}class="active"{% endif %}>Start Date</label>
+                            {% if form.start_date.errors %}
+                                <span class="red-text">{{ form.start_date.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m5">
+                            <i class="material-icons prefix">date_range</i>
+                            {{ form.end_date }}
+                            <label for="{{ form.end_date.id_for_label }}" {% if form.end_date.value %}class="active"{% endif %}>End Date</label>
+                            {% if form.end_date.errors %}
+                                <span class="red-text">{{ form.end_date.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m2">
+                            <button class="btn waves-effect waves-light" type="submit" style="width: 100%;">
+                                <i class="material-icons left">filter_list</i> Apply
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="card-panel red lighten-4">
+                            <span class="red-text">{{ form.non_field_errors.0 }}</span>
+                        </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        
+        <!-- Report Summary -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Inventory Summary (Current Status)</span>
+                
+                <div class="row">
+                    <div class="col s12 m4">
+                        <div class="card-panel center-align">
+                            <i class="material-icons medium green-text">inventory</i>
+                            <h5>Total Drugs</h5>
+                            <h3>{{ drugs.count }}</h3>
+                            <p>Number of unique drugs</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col s12 m4">
+                        <div class="card-panel center-align">
+                            <i class="material-icons medium red-text">warning</i>
+                            <h5>Low Stock Items</h5>
+                            <h3>{{ low_stock_drugs.count }}</h3>
+                            <p>Items below reorder level</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col s12 m4">
+                        <div class="card-panel center-align">
+                            <i class="material-icons medium orange-text">schedule</i>
+                            <h5>Expiring Soon</h5>
+                            <h3>{{ expiring_drugs.count }}</h3>
+                            <p>Drugs expiring within 2 months</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col s12 center-align">
+                        <div class="card-panel">
+                            <h5>Total Stock Value</h5>
+                            <h3>${{ total_stock_value|floatformat:2 }}</h3>
+                            <p>Based on cost price</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Export Buttons -->
+                <div class="row">
+                    <div class="col s12 center-align">
+                        <a href="{% url 'inventory_report' %}?{{ request.GET.urlencode }}&export=pdf" class="btn red">
+                            <i class="material-icons left">picture_as_pdf</i> Export as PDF
+                        </a>
+                        <a href="{% url 'inventory_report' %}?{{ request.GET.urlencode }}&export=excel" class="btn green">
+                            <i class="material-icons left">grid_on</i> Export as Excel
+                        </a>
+                        <a href="{% url 'inventory_report' %}?{{ request.GET.urlencode }}&export=csv" class="btn blue">
+                            <i class="material-icons left">insert_drive_file</i> Export as CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Low Stock Alerts -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left red-text">warning</i>
+                    Low Stock Items
+                </span>
+                
+                {% if low_stock_drugs %}
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Brand</th>
+                            <th>Current Stock</th>
+                            <th>Reorder Level</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for drug in low_stock_drugs %}
+                        <tr>
+                            <td>{{ drug.name }}</td>
+                            <td>{{ drug.brand }}</td>
+                            <td class="{% if drug.stock_quantity == 0 %}red-text{% else %}orange-text{% endif %}">
+                                {{ drug.stock_quantity }}
+                            </td>
+                            <td>{{ drug.reorder_level }}</td>
+                            <td>
+                                {% if drug.stock_quantity == 0 %}
+                                    <span class="red-text">Out of Stock</span>
+                                {% else %}
+                                    <span class="orange-text">Low Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'drug_detail' drug.id %}" class="btn-floating btn-small waves-effect waves-light tooltipped" data-position="top" data-tooltip="View Details">
+                                    <i class="material-icons">visibility</i>
+                                </a>
+                                {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+                                <a href="{% url 'drug_edit' drug.id %}" class="btn-floating btn-small waves-effect waves-light blue tooltipped" data-position="top" data-tooltip="Edit">
+                                    <i class="material-icons">edit</i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No low stock items at this time.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Expiring Medications -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    <i class="material-icons left orange-text">schedule</i>
+                    Expiring Medications
+                </span>
+                
+                {% if expiring_drugs %}
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Brand</th>
+                            <th>Expiry Date</th>
+                            <th>Current Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for drug in expiring_drugs %}
+                        <tr>
+                            <td>{{ drug.name }}</td>
+                            <td>{{ drug.brand }}</td>
+                            <td class="orange-text">{{ drug.expiry_date|date:"M d, Y" }}</td>
+                            <td>{{ drug.stock_quantity }}</td>
+                            <td>
+                                <a href="{% url 'drug_detail' drug.id %}" class="btn-floating btn-small waves-effect waves-light tooltipped" data-position="top" data-tooltip="View Details">
+                                    <i class="material-icons">visibility</i>
+                                </a>
+                                {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+                                <a href="{% url 'drug_edit' drug.id %}" class="btn-floating btn-small waves-effect waves-light blue tooltipped" data-position="top" data-tooltip="Edit">
+                                    <i class="material-icons">edit</i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No medications expiring soon.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Inventory Movement -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Inventory Movement ({{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }})</span>
+                
+                {% if inventory_logs %}
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Drug</th>
+                            <th>Change</th>
+                            <th>Operation</th>
+                            <th>Reference</th>
+                            <th>User</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in inventory_logs %}
+                        <tr>
+                            <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if log.drug %}
+                                    <a href="{% url 'drug_detail' log.drug.id %}">{{ log.drug.name }}</a>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td class="{% if log.quantity_change > 0 %}green-text{% elif log.quantity_change < 0 %}red-text{% endif %}">
+                                {% if log.quantity_change > 0 %}+{% endif %}{{ log.quantity_change }}
+                            </td>
+                            <td>{{ log.get_operation_type_display }}</td>
+                            <td>{{ log.reference|default:"N/A" }}</td>
+                            <td>{{ log.user.username|default:"System" }}</td>
+                            <td>{{ log.notes|default:"N/A" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No inventory movement data for the selected period.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Current Inventory -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Current Inventory</span>
+                
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Brand</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Cost Price</th>
+                            <th>Selling Price</th>
+                            <th>Expiry Date</th>
+                            <th>Stock Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for drug in drugs %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'drug_detail' drug.id %}">{{ drug.name }}</a>
+                                {% if not drug.is_active %}<span class="red-text">(Inactive)</span>{% endif %}
+                            </td>
+                            <td>{{ drug.brand }}</td>
+                            <td>{{ drug.category.name|default:"Uncategorized" }}</td>
+                            <td class="{% if drug.stock_quantity == 0 %}red-text{% elif drug.is_low_stock %}orange-text{% else %}green-text{% endif %}">
+                                {{ drug.stock_quantity }}
+                            </td>
+                            <td>${{ drug.cost_price|floatformat:2 }}</td>
+                            <td>${{ drug.selling_price|floatformat:2 }}</td>
+                            <td class="{% if drug.is_expired %}red-text{% elif drug.is_expiring_soon %}orange-text{% endif %}">
+                                {{ drug.expiry_date|date:"M d, Y" }}
+                            </td>
+                            <td>${{ drug.stock_quantity|multiply:drug.cost_price|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Multiply filter for calculating stock value
+var multiply = function(value, arg) {
+    return value * arg;
+};
+</script>
+{% endblock %}

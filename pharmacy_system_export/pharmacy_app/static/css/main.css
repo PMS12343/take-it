@@ -1,0 +1,241 @@
+/* 
+ * Main CSS file for Pharmacy Management System
+ * Extends MaterializeCSS styles
+ */
+
+/* Dashboard customizations */
+.info-card .card-content {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+.info-card-value {
+    margin: 10px 0 5px;
+    font-size: 2.2rem;
+    font-weight: 300;
+}
+
+.card .card-title {
+    font-weight: 400;
+}
+
+/* Custom colors and utility classes */
+.low-stock {
+    color: #ff9800 !important; /* Orange */
+}
+
+.out-of-stock {
+    color: #f44336 !important; /* Red */
+}
+
+.expiring-soon {
+    color: #ff9800 !important; /* Orange */
+}
+
+.expired {
+    color: #f44336 !important; /* Red */
+}
+
+.healthy-stock {
+    color: #4caf50 !important; /* Green */
+}
+
+/* Table customizations */
+table.highlight>tbody>tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+table.striped>tbody>tr:nth-child(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+th {
+    font-weight: 500;
+}
+
+/* Form improvements */
+.input-field .prefix.active {
+    color: #4caf50;
+}
+
+.input-field input:focus + label,
+.input-field textarea:focus + label {
+    color: #4caf50 !important;
+}
+
+.input-field input:focus,
+.input-field textarea:focus {
+    border-bottom: 1px solid #4caf50 !important;
+    box-shadow: 0 1px 0 0 #4caf50 !important;
+}
+
+/* Dropdown style improvements */
+.dropdown-content li>a, 
+.dropdown-content li>span {
+    color: #388e3c;
+}
+
+/* Pills and chips */
+.chip {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+
+/* Notifications */
+.notification-badge {
+    position: relative;
+    top: -10px;
+    right: 10px;
+    font-size: 0.6rem;
+    background-color: #f44336;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 5px;
+}
+
+/* Invoice print styles */
+@media print {
+    nav, footer, .sidenav, .fixed-action-btn, .btn, 
+    .no-print, .page-title {
+        display: none !important;
+    }
+    
+    body {
+        background-color: white;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .card {
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .card-content {
+        padding: 0;
+    }
+    
+    .card-action {
+        display: none;
+    }
+}
+
+/* Report page styles */
+.report-summary-card {
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.report-summary-card h3 {
+    margin: 5px 0;
+    font-size: 2rem;
+}
+
+/* Mobile responsiveness improvements */
+@media only screen and (max-width: 992px) {
+    main {
+        padding-left: 0;
+    }
+    
+    .sidenav.sidenav-fixed {
+        transform: translateX(-105%);
+    }
+    
+    .info-card-value {
+        font-size: 1.8rem;
+    }
+}
+
+/* Toast customizations */
+.toast {
+    background-color: #388e3c;
+}
+
+.toast.error {
+    background-color: #f44336;
+}
+
+.toast.warning {
+    background-color: #ff9800;
+}
+
+/* Animation for dashboard cards */
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 17px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+/* Patient details section */
+.patient-medical-info {
+    border-left: 4px solid #4caf50;
+    padding-left: 15px;
+}
+
+/* Drug interaction severity indicators */
+.severity-severe {
+    color: #f44336;
+    font-weight: 500;
+}
+
+.severity-moderate {
+    color: #ff9800;
+    font-weight: 500;
+}
+
+.severity-mild {
+    color: #ffeb3b;
+    font-weight: 500;
+}
+
+/* Improved select dropdown styles */
+.select-wrapper input.select-dropdown:focus {
+    border-bottom: 1px solid #4caf50;
+}
+
+.select-wrapper .caret {
+    fill: #4caf50;
+}
+
+/* Dashboard status icons */
+.status-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+/* Fix for MaterializeCSS select label bug */
+.select-wrapper+label {
+    top: -26px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

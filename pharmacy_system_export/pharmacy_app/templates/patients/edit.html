@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Patient - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12 m10 offset-m1 l8 offset-l2">
+        <h4 class="page-title">Edit Patient</h4>
+        
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">{{ patient.full_name }}</span>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">person</i>
+                            {{ form.first_name }}
+                            <label for="{{ form.first_name.id_for_label }}" {% if form.first_name.value %}class="active"{% endif %}>First Name</label>
+                            {% if form.first_name.errors %}
+                                <span class="red-text">{{ form.first_name.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">person</i>
+                            {{ form.last_name }}
+                            <label for="{{ form.last_name.id_for_label }}" {% if form.last_name.value %}class="active"{% endif %}>Last Name</label>
+                            {% if form.last_name.errors %}
+                                <span class="red-text">{{ form.last_name.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m4">
+                            <i class="material-icons prefix">cake</i>
+                            {{ form.age }}
+                            <label for="{{ form.age.id_for_label }}" {% if form.age.value %}class="active"{% endif %}>Age</label>
+                            {% if form.age.errors %}
+                                <span class="red-text">{{ form.age.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m4">
+                            <i class="material-icons prefix">wc</i>
+                            {{ form.sex }}
+                            <label>Sex</label>
+                            {% if form.sex.errors %}
+                                <span class="red-text">{{ form.sex.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m4">
+                            <i class="material-icons prefix">opacity</i>
+                            {{ form.blood_type }}
+                            <label>Blood Type</label>
+                            {% if form.blood_type.errors %}
+                                <span class="red-text">{{ form.blood_type.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">phone</i>
+                            {{ form.phone_number }}
+                            <label for="{{ form.phone_number.id_for_label }}" {% if form.phone_number.value %}class="active"{% endif %}>Phone Number</label>
+                            {% if form.phone_number.errors %}
+                                <span class="red-text">{{ form.phone_number.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">email</i>
+                            {{ form.email }}
+                            <label for="{{ form.email.id_for_label }}" {% if form.email.value %}class="active"{% endif %}>Email</label>
+                            {% if form.email.errors %}
+                                <span class="red-text">{{ form.email.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">home</i>
+                            {{ form.address }}
+                            <label for="{{ form.address.id_for_label }}" {% if form.address.value %}class="active"{% endif %}>Address</label>
+                            {% if form.address.errors %}
+                                <span class="red-text">{{ form.address.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">history</i>
+                            {{ form.disease_history }}
+                            <label for="{{ form.disease_history.id_for_label }}" {% if form.disease_history.value %}class="active"{% endif %}>Disease History</label>
+                            {% if form.disease_history.errors %}
+                                <span class="red-text">{{ form.disease_history.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">medical_services</i>
+                            {{ form.medication_history }}
+                            <label for="{{ form.medication_history.id_for_label }}" {% if form.medication_history.value %}class="active"{% endif %}>Medication History</label>
+                            {% if form.medication_history.errors %}
+                                <span class="red-text">{{ form.medication_history.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">warning</i>
+                            {{ form.allergies }}
+                            <label for="{{ form.allergies.id_for_label }}" {% if form.allergies.value %}class="active"{% endif %}>Allergies</label>
+                            {% if form.allergies.errors %}
+                                <span class="red-text">{{ form.allergies.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="card-panel red lighten-4">
+                            <span class="red-text">{{ form.non_field_errors.0 }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col s12 center-align">
+                            <button class="btn waves-effect waves-light" type="submit">
+                                Update Patient <i class="material-icons right">save</i>
+                            </button>
+                            <a href="{% url 'patient_detail' patient.id %}" class="btn waves-effect waves-light red">
+                                Cancel <i class="material-icons right">cancel</i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
