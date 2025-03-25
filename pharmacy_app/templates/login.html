@@ -17,19 +17,31 @@
                         
                         <div class="input-field">
                             <i class="material-icons prefix">person</i>
-                            <input type="text" id="username" name="username" class="validate" required>
-                            <label for="username">Username</label>
+                            {{ form.username }}
+                            <label for="{{ form.username.id_for_label }}">Username</label>
+                            {% if form.username.errors %}
+                                <span class="red-text">{{ form.username.errors.0 }}</span>
+                            {% endif %}
                         </div>
                         
                         <div class="input-field">
                             <i class="material-icons prefix">lock</i>
-                            <input type="password" id="password" name="password" class="validate" required>
-                            <label for="password">Password</label>
+                            {{ form.password }}
+                            <label for="{{ form.password.id_for_label }}">Password</label>
+                            {% if form.password.errors %}
+                                <span class="red-text">{{ form.password.errors.0 }}</span>
+                            {% endif %}
                         </div>
                         
                         {% if form.non_field_errors %}
                             <div class="card-panel red lighten-4">
                                 <span class="red-text">{{ form.non_field_errors.0 }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if error_message %}
+                            <div class="card-panel red lighten-4">
+                                <span class="red-text">{{ error_message }}</span>
                             </div>
                         {% endif %}
                         
@@ -44,4 +56,38 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Ensure CSRF token is properly set for AJAX requests
+    $(document).ready(function() {
+        // Get the CSRF token from the cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Set up CSRF token for AJAX requests
+        const csrftoken = getCookie('csrftoken');
+        
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

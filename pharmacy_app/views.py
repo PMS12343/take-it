@@ -31,28 +31,36 @@ from .utils import (
 )
 
 # Authentication Views
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+@ensure_csrf_cookie
 def login_view(request):
-    """Handle user login"""
+    """Handle user login with enhanced CSRF protection"""
     if request.user.is_authenticated:
         return redirect('dashboard')
-        
+    
+    form = UserLoginForm()
+    error_message = None
+    
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        print(f"Login attempt with username: {username}")
-        
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            print(f"Authentication successful for user: {username}")
-            login(request, user)
-            next_url = request.GET.get('next', 'dashboard')
-            return redirect(next_url)
-        else:
-            print(f"Authentication failed for user: {username}")
-            messages.error(request, "Invalid username or password.")
+        form = UserLoginForm(data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            print(f"Login attempt with username: {username}")
             
-    return render(request, 'login.html')
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
+                print(f"Authentication successful for user: {username}")
+                login(request, user)
+                next_url = request.GET.get('next', 'dashboard')
+                return redirect(next_url)
+        else:
+            print(f"Form validation failed")
+            error_message = "Invalid username or password."
+            
+    return render(request, 'login.html', {'form': form, 'error_message': error_message})
 
 def logout_view(request):
     """Handle user logout"""

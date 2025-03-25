@@ -25,6 +25,12 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.replit.app',
 ]
 
+# CSRF Cookie settings
+CSRF_USE_SESSIONS = True
+CSRF_COOKIE_SECURE = False  # Set to True only in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to access the cookie
+CSRF_COOKIE_SAMESITE = 'Lax'  # Allows cross-site requests from same domain
+
 # Application definition
 
 INSTALLED_APPS = [
