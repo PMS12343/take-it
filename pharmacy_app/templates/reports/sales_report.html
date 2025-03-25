@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales Report - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <h4 class="page-title">
+            Sales Report
+            <a href="{% url 'reports_index' %}" class="btn right">
+                <i class="material-icons left">arrow_back</i> Back to Reports
+            </a>
+        </h4>
+        
+        <!-- Date Range Filter -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Select Date Range</span>
+                
+                <form method="get" action="{% url 'sales_report' %}">
+                    <div class="row">
+                        <div class="input-field col s12 m5">
+                            <i class="material-icons prefix">date_range</i>
+                            {{ form.start_date }}
+                            <label for="{{ form.start_date.id_for_label }}" {% if form.start_date.value %}class="active"{% endif %}>Start Date</label>
+                            {% if form.start_date.errors %}
+                                <span class="red-text">{{ form.start_date.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m5">
+                            <i class="material-icons prefix">date_range</i>
+                            {{ form.end_date }}
+                            <label for="{{ form.end_date.id_for_label }}" {% if form.end_date.value %}class="active"{% endif %}>End Date</label>
+                            {% if form.end_date.errors %}
+                                <span class="red-text">{{ form.end_date.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m2">
+                            <button class="btn waves-effect waves-light" type="submit" style="width: 100%;">
+                                <i class="material-icons left">filter_list</i> Apply
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="card-panel red lighten-4">
+                            <span class="red-text">{{ form.non_field_errors.0 }}</span>
+                        </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        
+        <!-- Report Summary -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Sales Summary ({{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }})</span>
+                
+                <div class="row">
+                    <div class="col s12 m4">
+                        <div class="card-panel center-align">
+                            <i class="material-icons medium green-text">receipt</i>
+                            <h5>Total Sales</h5>
+                            <h3>{{ total_sales }}</h3>
+                            <p>Number of transactions</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col s12 m4">
+                        <div class="card-panel center-align">
+                            <i class="material-icons medium blue-text">attach_money</i>
+                            <h5>Total Revenue</h5>
+                            <h3>${{ total_revenue|floatformat:2 }}</h3>
+                            <p>Generated revenue</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col s12 m4">
+                        <div class="card-panel center-align">
+                            <i class="material-icons medium orange-text">equalizer</i>
+                            <h5>Average Sale</h5>
+                            <h3>${{ avg_sale_value|floatformat:2 }}</h3>
+                            <p>Average transaction value</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Export Buttons -->
+                <div class="row">
+                    <div class="col s12 center-align">
+                        <a href="{% url 'sales_report' %}?{{ request.GET.urlencode }}&export=pdf" class="btn red">
+                            <i class="material-icons left">picture_as_pdf</i> Export as PDF
+                        </a>
+                        <a href="{% url 'sales_report' %}?{{ request.GET.urlencode }}&export=excel" class="btn green">
+                            <i class="material-icons left">grid_on</i> Export as Excel
+                        </a>
+                        <a href="{% url 'sales_report' %}?{{ request.GET.urlencode }}&export=csv" class="btn blue">
+                            <i class="material-icons left">insert_drive_file</i> Export as CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sales by Day Chart -->
+        <div class="row">
+            <div class="col s12">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Daily Sales</span>
+                        <div style="height: 300px;">
+                            <canvas id="dailySalesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top Selling Drugs -->
+        <div class="row">
+            <div class="col s12 m7">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Top Selling Drugs</span>
+                        
+                        {% if top_drugs %}
+                        <table class="striped">
+                            <thead>
+                                <tr>
+                                    <th>Drug</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for drug in top_drugs %}
+                                <tr>
+                                    <td>{{ drug.drug_name }}</td>
+                                    <td>{{ drug.total_quantity }}</td>
+                                    <td>${{ drug.total_value|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="center-align">No sales data available for this period.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col s12 m5">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Top Drugs by Revenue</span>
+                        <div style="height: 300px;">
+                            <canvas id="topDrugsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Sales Table -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Detailed Sales</span>
+                
+                {% if sales %}
+                <table class="striped responsive-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Invoice #</th>
+                            <th>Patient</th>
+                            <th>Items</th>
+                            <th>Amount</th>
+                            <th>Payment Method</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in sales %}
+                        <tr>
+                            <td>{{ sale.date|date:"M d, Y H:i" }}</td>
+                            <td>{{ sale.invoice_number }}</td>
+                            <td>
+                                {% if sale.patient %}
+                                    {{ sale.patient.full_name }}
+                                {% else %}
+                                    Walk-in Customer
+                                {% endif %}
+                            </td>
+                            <td>{{ sale.item_count }}</td>
+                            <td>${{ sale.total_amount|floatformat:2 }}</td>
+                            <td>{{ sale.payment_method }}</td>
+                            <td>
+                                <a href="{% url 'sale_detail' sale.id %}" class="btn-floating btn-small waves-effect waves-light tooltipped" data-position="top" data-tooltip="View Details">
+                                    <i class="material-icons">visibility</i>
+                                </a>
+                                <a href="{% url 'sale_invoice' sale.id %}" class="btn-floating btn-small waves-effect waves-light blue tooltipped" data-position="top" data-tooltip="View Invoice">
+                                    <i class="material-icons">receipt</i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="center-align">No sales data available for this period.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Daily Sales Chart
+    var dailySalesCtx = document.getElementById('dailySalesChart').getContext('2d');
+    var dailySalesChart = new Chart(dailySalesCtx, {
+        type: 'bar',
+        data: {
+            labels: [
+                {% for day in daily_sales %}
+                "{{ day.day|date:'M d, Y' }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Sales Count',
+                data: [
+                    {% for day in daily_sales %}
+                    {{ day.count }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                yAxisID: 'y-axis-1'
+            }, {
+                label: 'Revenue ($)',
+                data: [
+                    {% for day in daily_sales %}
+                    {{ day.total }},
+                    {% endfor %}
+                ],
+                type: 'line',
+                fill: false,
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                yAxisID: 'y-axis-2'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    id: 'y-axis-1',
+                    ticks: {
+                        beginAtZero: true
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Number of Sales'
+                    }
+                }, {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    id: 'y-axis-2',
+                    gridLines: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value, index, values) {
+                            return '$' + value;
+                        }
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Revenue ($)'
+                    }
+                }]
+            }
+        }
+    });
+    
+    // Top Drugs Chart
+    {% if top_drugs %}
+    var topDrugsCtx = document.getElementById('topDrugsChart').getContext('2d');
+    var topDrugsChart = new Chart(topDrugsCtx, {
+        type: 'pie',
+        data: {
+            labels: [
+                {% for drug in top_drugs|slice:":5" %}
+                "{{ drug.drug_name|truncatechars:20 }}",
+                {% endfor %}
+                {% if top_drugs.count > 5 %}"Others"{% endif %}
+            ],
+            datasets: [{
+                data: [
+                    {% for drug in top_drugs|slice:":5" %}
+                    {{ drug.total_value }},
+                    {% endfor %}
+                    {% if top_drugs.count > 5 %}
+                    {{ top_drugs|slice:"5:"|dictsortreversed:"total_value"|slice:":"|sum:"total_value" }}
+                    {% endif %}
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            legend: {
+                position: 'right'
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        var dataset = data.datasets[tooltipItem.datasetIndex];
+                        var total = dataset.data.reduce(function(previousValue, currentValue, currentIndex, array) {
+                            return previousValue + currentValue;
+                        });
+                        var currentValue = dataset.data[tooltipItem.index];
+                        var percentage = Math.floor(((currentValue/total) * 100)+0.5);
+                        return data.labels[tooltipItem.index] + ': $' + currentValue.toFixed(2) + ' (' + percentage + '%)';
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

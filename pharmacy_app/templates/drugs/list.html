@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Drugs - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <h4 class="page-title">
+            Drug Inventory
+            {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+            <a href="{% url 'drug_add' %}" class="btn-floating right tooltipped" data-position="left" data-tooltip="Add New Drug">
+                <i class="material-icons">add</i>
+            </a>
+            {% endif %}
+        </h4>
+        
+        <!-- Search and Filters -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Search & Filters</span>
+                
+                <form method="get" action="{% url 'drug_list' %}">
+                    <div class="row">
+                        <div class="input-field col s12 m4">
+                            <i class="material-icons prefix">search</i>
+                            <input id="search" type="text" name="q" value="{{ query }}">
+                            <label for="search">Search by name or brand</label>
+                        </div>
+                        
+                        <div class="input-field col s12 m3">
+                            <select name="category" id="category">
+                                <option value="" {% if not category_id %}selected{% endif %}>All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label>Category</label>
+                        </div>
+                        
+                        <div class="input-field col s12 m2">
+                            <select name="stock_status" id="stock_status">
+                                <option value="" {% if not stock_status %}selected{% endif %}>All Stock</option>
+                                <option value="low" {% if stock_status == 'low' %}selected{% endif %}>Low Stock</option>
+                                <option value="out" {% if stock_status == 'out' %}selected{% endif %}>Out of Stock</option>
+                            </select>
+                            <label>Stock Status</label>
+                        </div>
+                        
+                        <div class="input-field col s12 m2">
+                            <select name="expiry_status" id="expiry_status">
+                                <option value="" {% if not expiry_status %}selected{% endif %}>All Dates</option>
+                                <option value="expiring" {% if expiry_status == 'expiring' %}selected{% endif %}>Expiring Soon</option>
+                                <option value="expired" {% if expiry_status == 'expired' %}selected{% endif %}>Expired</option>
+                            </select>
+                            <label>Expiry Status</label>
+                        </div>
+                        
+                        <div class="input-field col s12 m1">
+                            <button class="btn waves-effect waves-light" type="submit">
+                                <i class="material-icons">filter_list</i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Drugs Table -->
+        <div class="card">
+            <div class="card-content">
+                {% if drugs %}
+                <table class="responsive-table highlight">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Brand</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Cost Price</th>
+                            <th>Selling Price</th>
+                            <th>Expiry Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for drug in drugs %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'drug_detail' drug.id %}">{{ drug.name }}</a>
+                                {% if not drug.is_active %}<span class="red-text">(Inactive)</span>{% endif %}
+                            </td>
+                            <td>{{ drug.brand }}</td>
+                            <td>{{ drug.category.name|default:"Uncategorized" }}</td>
+                            <td class="{% if drug.stock_quantity == 0 %}red-text{% elif drug.is_low_stock %}orange-text{% else %}green-text{% endif %}">
+                                {{ drug.stock_quantity }}
+                                {% if drug.is_low_stock and drug.stock_quantity > 0 %}
+                                <i class="material-icons tiny">warning</i>
+                                {% endif %}
+                            </td>
+                            <td>${{ drug.cost_price|floatformat:2 }}</td>
+                            <td>${{ drug.selling_price|floatformat:2 }}</td>
+                            <td class="{% if drug.is_expired %}red-text{% elif drug.is_expiring_soon %}orange-text{% endif %}">
+                                {{ drug.expiry_date|date:"M d, Y" }}
+                                {% if drug.is_expiring_soon and not drug.is_expired %}
+                                <i class="material-icons tiny">schedule</i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'drug_detail' drug.id %}" class="btn-floating btn-small waves-effect waves-light tooltipped" data-position="top" data-tooltip="View Details">
+                                    <i class="material-icons">visibility</i>
+                                </a>
+                                
+                                {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+                                <a href="{% url 'drug_edit' drug.id %}" class="btn-floating btn-small waves-effect waves-light blue tooltipped" data-position="top" data-tooltip="Edit">
+                                    <i class="material-icons">edit</i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                {% else %}
+                <div class="center">
+                    <p>No drugs found matching your criteria.</p>
+                    {% if query or category_id or stock_status or expiry_status %}
+                    <a href="{% url 'drug_list' %}" class="btn waves-effect waves-light">Clear Filters</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

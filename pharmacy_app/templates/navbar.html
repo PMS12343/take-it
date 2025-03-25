@@ -1,0 +1,129 @@
+<!-- Top navigation bar -->
+<div class="navbar-fixed no-print">
+    <nav class="green darken-1">
+        <div class="nav-wrapper container">
+            <a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+            <a href="{% url 'dashboard' %}" class="brand-logo">PMS</a>
+            <ul class="right hide-on-med-and-down">
+                <li>
+                    <a href="{% url 'dashboard' %}" class="tooltipped" data-position="bottom" data-tooltip="Dashboard">
+                        <i class="material-icons">dashboard</i>
+                    </a>
+                </li>
+                {% if total_notifications > 0 %}
+                <li>
+                    <a href="#notifications-modal" class="modal-trigger tooltipped" data-position="bottom" data-tooltip="Notifications">
+                        <i class="material-icons">notifications</i>
+                        <span class="badge-notify">{{ total_notifications }}</span>
+                    </a>
+                </li>
+                {% endif %}
+                <li>
+                    <a class="dropdown-trigger" href="#!" data-target="profile-dropdown">
+                        {{ user.username }} ({{ user.profile.role }})
+                        <i class="material-icons right">arrow_drop_down</i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
+
+<!-- Profile dropdown menu -->
+<ul id="profile-dropdown" class="dropdown-content">
+    <li><a href="{% url 'profile' %}"><i class="material-icons">person</i>Profile</a></li>
+    <li class="divider"></li>
+    <li><a href="{% url 'logout' %}"><i class="material-icons">exit_to_app</i>Logout</a></li>
+</ul>
+
+<!-- Side navigation -->
+<ul id="slide-out" class="sidenav sidenav-fixed no-print">
+    <li class="logo-container">
+        <a href="{% url 'dashboard' %}" class="brand-logo">Pharmacy System</a>
+    </li>
+    <li class="user-view">
+        <div class="user-info">
+            <span>{{ user.username }}</span>
+            <p class="grey-text">{{ user.profile.role }}</p>
+        </div>
+    </li>
+    <li><div class="divider"></div></li>
+    <li><a href="{% url 'dashboard' %}"><i class="material-icons">dashboard</i>Dashboard</a></li>
+    
+    <!-- Drug Management -->
+    <li>
+        <a class="subheader">Drug Management</a>
+    </li>
+    <li><a href="{% url 'drug_list' %}"><i class="material-icons">medical_services</i>Drugs</a></li>
+    {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+    <li><a href="{% url 'drug_add' %}"><i class="material-icons">add_circle</i>Add Drug</a></li>
+    {% endif %}
+    
+    <!-- Patient Management -->
+    <li>
+        <a class="subheader">Patient Management</a>
+    </li>
+    <li><a href="{% url 'patient_list' %}"><i class="material-icons">people</i>Patients</a></li>
+    {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' or user.profile.role == 'Manager' %}
+    <li><a href="{% url 'patient_add' %}"><i class="material-icons">person_add</i>Add Patient</a></li>
+    {% endif %}
+    
+    <!-- Sales Management -->
+    <li>
+        <a class="subheader">Sales Management</a>
+    </li>
+    {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' or user.profile.role == 'Sales Clerk' %}
+    <li><a href="{% url 'new_sale' %}"><i class="material-icons">point_of_sale</i>New Sale</a></li>
+    {% endif %}
+    <li><a href="{% url 'sale_list' %}"><i class="material-icons">receipt</i>Sales History</a></li>
+    
+    <!-- Reports -->
+    {% if user.profile.role == 'Admin' or user.profile.role == 'Manager' %}
+    <li>
+        <a class="subheader">Reports</a>
+    </li>
+    <li><a href="{% url 'reports_index' %}"><i class="material-icons">bar_chart</i>All Reports</a></li>
+    <li><a href="{% url 'sales_report' %}"><i class="material-icons">trending_up</i>Sales Report</a></li>
+    <li><a href="{% url 'inventory_report' %}"><i class="material-icons">inventory</i>Inventory Report</a></li>
+    {% endif %}
+    
+    <!-- User Management (Admin only) -->
+    {% if user.profile.role == 'Admin' %}
+    <li>
+        <a class="subheader">Administration</a>
+    </li>
+    <li><a href="{% url 'user_list' %}"><i class="material-icons">manage_accounts</i>User Management</a></li>
+    <li><a href="{% url 'user_add' %}"><i class="material-icons">person_add</i>Add User</a></li>
+    {% endif %}
+    
+    <li><div class="divider"></div></li>
+    <li><a href="{% url 'profile' %}"><i class="material-icons">settings</i>Settings</a></li>
+    <li><a href="{% url 'logout' %}"><i class="material-icons">exit_to_app</i>Logout</a></li>
+</ul>
+
+<!-- Notifications Modal -->
+<div id="notifications-modal" class="modal">
+    <div class="modal-content">
+        <h4>Notifications</h4>
+        {% if low_stock_count > 0 %}
+        <div class="section">
+            <h5>Low Stock Alerts ({{ low_stock_count }})</h5>
+            <p>
+                <a href="{% url 'drug_list' %}?stock_status=low" class="btn">View Low Stock Drugs</a>
+            </p>
+        </div>
+        {% endif %}
+        
+        {% if expiring_count > 0 %}
+        <div class="section">
+            <h5>Expiring Drugs ({{ expiring_count }})</h5>
+            <p>
+                <a href="{% url 'drug_list' %}?expiry_status=expiring" class="btn">View Expiring Drugs</a>
+            </p>
+        </div>
+        {% endif %}
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+</div>

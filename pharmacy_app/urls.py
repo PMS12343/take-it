@@ -2,49 +2,43 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Authentication
+    # Authentication URLs
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-    path('register/', views.register_view, name='register'),
+    path('profile/', views.profile_view, name='profile'),
     
     # Dashboard
-    path('', views.dashboard, name='home'),
+    path('', views.dashboard, name='index'),
     path('dashboard/', views.dashboard, name='dashboard'),
     
-    # Drugs
+    # Drug Management
     path('drugs/', views.drug_list, name='drug_list'),
-    path('drugs/create/', views.drug_create, name='drug_create'),
-    path('drugs/<int:pk>/', views.drug_detail, name='drug_detail'),
-    path('drugs/<int:pk>/edit/', views.drug_edit, name='drug_edit'),
-    path('drugs/<int:pk>/delete/', views.drug_delete, name='drug_delete'),
+    path('drugs/add/', views.drug_add, name='drug_add'),
+    path('drugs/<int:drug_id>/', views.drug_detail, name='drug_detail'),
+    path('drugs/<int:drug_id>/edit/', views.drug_edit, name='drug_edit'),
     
-    # Patients
+    # Patient Management
     path('patients/', views.patient_list, name='patient_list'),
-    path('patients/create/', views.patient_create, name='patient_create'),
-    path('patients/<int:pk>/', views.patient_detail, name='patient_detail'),
-    path('patients/<int:pk>/edit/', views.patient_edit, name='patient_edit'),
-    path('patients/<int:pk>/delete/', views.patient_delete, name='patient_delete'),
+    path('patients/add/', views.patient_add, name='patient_add'),
+    path('patients/<int:patient_id>/', views.patient_detail, name='patient_detail'),
+    path('patients/<int:patient_id>/edit/', views.patient_edit, name='patient_edit'),
     
     # Sales
+    path('sales/new/', views.new_sale, name='new_sale'),
     path('sales/', views.sale_list, name='sale_list'),
-    path('sales/create/', views.sale_create, name='sale_create'),
-    path('sales/<int:pk>/', views.sale_detail, name='sale_detail'),
-    
-    # Invoices
-    path('invoices/<int:pk>/', views.invoice_detail, name='invoice_detail'),
-    path('invoices/<int:pk>/pdf/', views.invoice_pdf, name='invoice_pdf'),
+    path('sales/<int:sale_id>/', views.sale_detail, name='sale_detail'),
+    path('sales/<int:sale_id>/invoice/', views.sale_invoice, name='sale_invoice'),
     
     # Reports
+    path('reports/', views.reports_index, name='reports_index'),
     path('reports/sales/', views.sales_report, name='sales_report'),
-    path('reports/sales/export/pdf/', views.sales_report_pdf, name='sales_report_pdf'),
-    path('reports/sales/export/excel/', views.sales_report_excel, name='sales_report_excel'),
+    path('reports/inventory/', views.inventory_report, name='inventory_report'),
     
-    # Notifications
-    path('notifications/', views.notification_list, name='notification_list'),
+    # User Management
+    path('users/', views.user_list, name='user_list'),
+    path('users/add/', views.user_add, name='user_add'),
+    path('users/<int:user_id>/edit/', views.user_edit, name='user_edit'),
     
-    # Drug Interactions
-    path('interactions/', views.interaction_list, name='interaction_list'),
-    path('interactions/create/', views.interaction_create, name='interaction_create'),
-    path('interactions/<int:pk>/edit/', views.interaction_edit, name='interaction_edit'),
-    path('interactions/<int:pk>/delete/', views.interaction_delete, name='interaction_delete'),
+    # API endpoints
+    path('api/drugs/<int:drug_id>/info/', views.get_drug_info, name='get_drug_info'),
 ]

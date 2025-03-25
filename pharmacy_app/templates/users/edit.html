@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit User - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12 m8 offset-m2">
+        <h4 class="page-title">Edit User</h4>
+        
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">{{ user.username }}</span>
+                
+                <div class="row">
+                    <div class="col s12">
+                        <table class="striped">
+                            <tbody>
+                                <tr>
+                                    <th>Username:</th>
+                                    <td>{{ user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>{{ user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Full Name:</th>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Date Joined:</th>
+                                    <td>{{ user.date_joined|date:"F j, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Last Login:</th>
+                                    <td>
+                                        {% if user.last_login %}
+                                            {{ user.last_login|date:"F j, Y, g:i a" }}
+                                        {% else %}
+                                            Never
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">assignment_ind</i>
+                            {{ form.role }}
+                            <label>Role</label>
+                            {% if form.role.errors %}
+                                <span class="red-text">{{ form.role.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="card-panel red lighten-4">
+                            <span class="red-text">{{ form.non_field_errors.0 }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col s12 center-align">
+                            <button class="btn waves-effect waves-light" type="submit">
+                                Update User <i class="material-icons right">save</i>
+                            </button>
+                            <a href="{% url 'user_list' %}" class="btn waves-effect waves-light red">
+                                Cancel <i class="material-icons right">cancel</i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Role Description Card -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Role Descriptions</span>
+                
+                <ul class="collection">
+                    <li class="collection-item">
+                        <h6>Admin</h6>
+                        <p>Full system access including user management, all reports, and system configuration.</p>
+                    </li>
+                    <li class="collection-item">
+                        <h6>Pharmacist</h6>
+                        <p>Can manage drug inventory, handle sales, run interaction checks, and access patient information.</p>
+                    </li>
+                    <li class="collection-item">
+                        <h6>Sales Clerk</h6>
+                        <p>Process sales and view limited inventory information, but cannot modify drugs or access full reports.</p>
+                    </li>
+                    <li class="collection-item">
+                        <h6>Manager</h6>
+                        <p>View reports, track performance, manage patients, but cannot modify all system data.</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

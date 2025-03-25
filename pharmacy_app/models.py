@@ -1,44 +1,81 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 from django.utils import timezone
-from datetime import timedelta
+import uuid
 
+class UserProfile(models.Model):
+    """Profile model extending the built-in User model"""
+    ROLE_CHOICES = [
+        ('Admin', 'Admin'),
+        ('Pharmacist', 'Pharmacist'),
+        ('Sales Clerk', 'Sales Clerk'),
+        ('Manager', 'Manager'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.role}"
+
+class DrugCategory(models.Model):
+    """Model for drug categories"""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name_plural = "Drug Categories"
+    
+    def __str__(self):
+        return self.name
 
 class Drug(models.Model):
+    """Model for drug information and inventory"""
     name = models.CharField(max_length=100)
     brand = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
-    quantity = models.PositiveIntegerField(default=0)
+    category = models.ForeignKey(DrugCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    stock_quantity = models.PositiveIntegerField(default=0)
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     reorder_level = models.PositiveIntegerField(default=10)
-    cost_price = models.DecimalField(max_digits=10, decimal_places=2)
-    selling_price = models.DecimalField(max_digits=10, decimal_places=2)
     expiry_date = models.DateField()
+    batch_number = models.CharField(max_length=100, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    @property
-    def is_low_stock(self):
-        return self.quantity <= self.reorder_level
-
-    @property
-    def is_expiring_soon(self):
-        return self.expiry_date <= (timezone.now().date() + timedelta(days=60))
-
+    
+    class Meta:
+        ordering = ['name', 'brand']
+    
     def __str__(self):
         return f"{self.name} ({self.brand})"
-
-    class Meta:
-        ordering = ['name']
-
+    
+    def is_low_stock(self):
+        """Check if drug stock is below reorder level"""
+        return self.stock_quantity <= self.reorder_level
+    
+    def is_expiring_soon(self):
+        """Check if drug is expiring within 2 months"""
+        today = timezone.now().date()
+        days_until_expiry = (self.expiry_date - today).days
+        return 0 < days_until_expiry <= 60
+    
+    def is_expired(self):
+        """Check if drug is already expired"""
+        return self.expiry_date < timezone.now().date()
 
 class Patient(models.Model):
-    SEX_CHOICES = (
+    """Model for patient information"""
+    SEX_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
         ('O', 'Other'),
-    )
+    ]
     
-    BLOOD_TYPE_CHOICES = (
+    BLOOD_TYPE_CHOICES = [
         ('A+', 'A+'),
         ('A-', 'A-'),
         ('B+', 'B+'),
@@ -47,102 +84,126 @@ class Patient(models.Model):
         ('AB-', 'AB-'),
         ('O+', 'O+'),
         ('O-', 'O-'),
-    )
+        ('Unknown', 'Unknown'),
+    ]
     
-    name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     age = models.PositiveIntegerField()
     sex = models.CharField(max_length=1, choices=SEX_CHOICES)
     address = models.TextField(blank=True, null=True)
-    phone = models.CharField(max_length=20)
+    phone_number = models.CharField(max_length=20)
     email = models.EmailField(blank=True, null=True)
-    blood_type = models.CharField(max_length=3, choices=BLOOD_TYPE_CHOICES, blank=True, null=True)
+    blood_type = models.CharField(max_length=10, choices=BLOOD_TYPE_CHOICES, default='Unknown')
     disease_history = models.TextField(blank=True, null=True)
     medication_history = models.TextField(blank=True, null=True)
+    allergies = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.name
-
+    
     class Meta:
-        ordering = ['name']
-
-
-class Sale(models.Model):
-    patient = models.ForeignKey(Patient, on_delete=models.PROTECT, related_name='sales')
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='sales')
-    date = models.DateTimeField(auto_now_add=True)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+        ordering = ['last_name', 'first_name']
     
     def __str__(self):
-        return f"Sale {self.id} - {self.patient.name}"
+        return f"{self.first_name} {self.last_name}"
+    
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+class Sale(models.Model):
+    """Model for recording sales transactions"""
+    invoice_number = models.CharField(max_length=20, unique=True, editable=False)
+    patient = models.ForeignKey(Patient, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    date = models.DateTimeField(default=timezone.now)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    payment_method = models.CharField(max_length=50, default='Cash')
+    payment_status = models.CharField(max_length=50, default='Paid')
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         ordering = ['-date']
-
-
-class SaleItem(models.Model):
-    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='items')
-    drug = models.ForeignKey(Drug, on_delete=models.PROTECT, related_name='sale_items')
-    quantity = models.PositiveIntegerField()
-    price_each = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def __str__(self):
+        return f"Invoice #{self.invoice_number} - {self.patient}"
     
     def save(self, *args, **kwargs):
-        # Set the price from the drug's current selling price if not set
-        if not self.price_each:
-            self.price_each = self.drug.selling_price
-        
-        # Create the sale item
+        if not self.invoice_number:
+            self.invoice_number = self.generate_invoice_number()
         super().save(*args, **kwargs)
-        
-        # Update sale total
-        self.sale.total_amount = sum(item.price_each * item.quantity for item in self.sale.items.all())
-        self.sale.save()
-        
-        # Create inventory log entry
-        InventoryLog.objects.create(
-            drug=self.drug,
-            change_quantity=-self.quantity,
-            reason=f"Sale {self.sale.id}",
-            changed_by=self.sale.created_by
-        )
-        
-        # Update drug quantity
-        self.drug.quantity -= self.quantity
-        self.drug.save()
+    
+    def generate_invoice_number(self):
+        """Generate a unique invoice number"""
+        # Format: INV-YYYYMMDD-XXXX
+        today = timezone.now().strftime('%Y%m%d')
+        random_suffix = str(uuid.uuid4().int)[:4]
+        return f"INV-{today}-{random_suffix}"
+    
+    @property
+    def item_count(self):
+        return self.saleitems.count()
+
+class SaleItem(models.Model):
+    """Model for individual items in a sale"""
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='saleitems')
+    drug = models.ForeignKey(Drug, on_delete=models.SET_NULL, null=True)
+    drug_name = models.CharField(max_length=200)  # Store name at time of sale
+    quantity = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)  # Unit price at time of sale
     
     def __str__(self):
-        return f"{self.sale} - {self.drug.name} x{self.quantity}"
-
+        return f"{self.drug_name} x {self.quantity} (Invoice #{self.sale.invoice_number})"
+    
+    @property
+    def total_price(self):
+        return self.quantity * self.price
 
 class InventoryLog(models.Model):
-    drug = models.ForeignKey(Drug, on_delete=models.CASCADE, related_name='inventory_logs')
-    change_quantity = models.IntegerField()  # Can be positive (stocking) or negative (sales, expiry)
-    reason = models.CharField(max_length=200)
-    changed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='inventory_logs')
-    timestamp = models.DateTimeField(auto_now_add=True)
+    """Model for tracking inventory changes"""
+    OPERATION_CHOICES = [
+        ('ADD', 'Stock Added'),
+        ('REMOVE', 'Stock Removed'),
+        ('ADJUST', 'Stock Adjusted'),
+        ('SALE', 'Sale Transaction'),
+        ('RETURN', 'Return to Inventory'),
+    ]
     
-    def __str__(self):
-        return f"{self.drug.name} - {self.change_quantity} - {self.reason}"
+    drug = models.ForeignKey(Drug, on_delete=models.SET_NULL, null=True)
+    quantity_change = models.IntegerField()  # Can be positive (increase) or negative (decrease)
+    operation_type = models.CharField(max_length=10, choices=OPERATION_CHOICES)
+    reference = models.CharField(max_length=100, blank=True, null=True)  # e.g., sale invoice or order number
+    notes = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         ordering = ['-timestamp']
-
-
-class DrugInteraction(models.Model):
-    SEVERITY_CHOICES = (
-        ('mild', 'Mild'),
-        ('moderate', 'Moderate'),
-        ('severe', 'Severe'),
-    )
-    
-    drug1 = models.ForeignKey(Drug, on_delete=models.CASCADE, related_name='interactions_as_drug1')
-    drug2 = models.ForeignKey(Drug, on_delete=models.CASCADE, related_name='interactions_as_drug2')
-    description = models.TextField()
-    severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES)
     
     def __str__(self):
-        return f"Interaction between {self.drug1.name} and {self.drug2.name}"
+        action = "added to" if self.quantity_change > 0 else "removed from"
+        return f"{abs(self.quantity_change)} units {action} {self.drug} on {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
+
+class DrugInteraction(models.Model):
+    """Model for drug-drug interactions"""
+    SEVERITY_CHOICES = [
+        ('SEVERE', 'Severe - Avoid Combination'),
+        ('MODERATE', 'Moderate - Use with Caution'),
+        ('MILD', 'Mild - Monitor Patient'),
+        ('NONE', 'No Interaction'),
+    ]
+    
+    drug_one = models.ForeignKey(Drug, on_delete=models.CASCADE, related_name='interactions_as_one')
+    drug_two = models.ForeignKey(Drug, on_delete=models.CASCADE, related_name='interactions_as_two')
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
+    description = models.TextField()
     
     class Meta:
-        unique_together = ('drug1', 'drug2')
+        unique_together = ('drug_one', 'drug_two')
+    
+    def __str__(self):
+        return f"Interaction between {self.drug_one} and {self.drug_two}: {self.severity}"

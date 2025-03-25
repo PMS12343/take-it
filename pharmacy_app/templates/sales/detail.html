@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Sale Details - {{ sale.invoice_number }} - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <h4 class="page-title">
+            Sale Details
+            <a href="{% url 'sale_invoice' sale.id %}" class="btn-floating right tooltipped blue" data-position="left" data-tooltip="View Invoice">
+                <i class="material-icons">receipt</i>
+            </a>
+        </h4>
+        
+        {% if interaction_warnings %}
+        <div class="card-panel orange lighten-4">
+            <h5 class="orange-text text-darken-4">
+                <i class="material-icons left">warning</i>
+                Drug Interaction Warning
+            </h5>
+            <p>The following drug interactions were detected in this sale:</p>
+            <ul class="collection">
+                {% for warning in interaction_warnings %}
+                <li class="collection-item">
+                    <span class="title"><strong>{{ warning.drug1 }}</strong> and <strong>{{ warning.drug2 }}</strong></span>
+                    <p>
+                        <span class="{% if warning.severity == 'SEVERE' %}red-text{% elif warning.severity == 'MODERATE' %}orange-text{% else %}yellow-text text-darken-3{% endif %}">
+                            {{ warning.severity }}
+                        </span>
+                        <br>
+                        {{ warning.description }}
+                    </p>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Sale Information Card -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Invoice #{{ sale.invoice_number }}</span>
+                
+                <div class="row">
+                    <div class="col s12 m6">
+                        <table class="striped">
+                            <tbody>
+                                <tr>
+                                    <th>Date & Time:</th>
+                                    <td>{{ sale.date|date:"F j, Y, g:i a" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Patient:</th>
+                                    <td>
+                                        {% if sale.patient %}
+                                            <a href="{% url 'patient_detail' sale.patient.id %}">{{ sale.patient.full_name }}</a>
+                                        {% else %}
+                                            Walk-in Customer
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Served By:</th>
+                                    <td>{{ sale.user.username }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="col s12 m6">
+                        <table class="striped">
+                            <tbody>
+                                <tr>
+                                    <th>Payment Method:</th>
+                                    <td>{{ sale.payment_method }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Status:</th>
+                                    <td>
+                                        {% if sale.payment_status == 'Paid' %}
+                                            <span class="green-text">{{ sale.payment_status }}</span>
+                                        {% elif sale.payment_status == 'Pending' %}
+                                            <span class="orange-text">{{ sale.payment_status }}</span>
+                                        {% else %}
+                                            <span class="red-text">{{ sale.payment_status }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Notes:</th>
+                                    <td>{{ sale.notes|default:"No notes provided" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sale Items -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Items Sold</span>
+                
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Drug</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item.drug_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>${{ item.price|floatformat:2 }}</td>
+                            <td>${{ item.total_price|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="4" class="right-align">Subtotal:</th>
+                            <td>${{ sale.subtotal|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th colspan="4" class="right-align">Tax:</th>
+                            <td>${{ sale.tax|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th colspan="4" class="right-align">Discount:</th>
+                            <td>${{ sale.discount|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th colspan="4" class="right-align">Total:</th>
+                            <td><strong>${{ sale.total_amount|floatformat:2 }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="card-action">
+                <a href="{% url 'sale_list' %}">Back to Sales List</a>
+                <a href="{% url 'sale_invoice' sale.id %}">View Invoice</a>
+                <a href="{% url 'sale_invoice' sale.id %}?pdf=1">Download PDF</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

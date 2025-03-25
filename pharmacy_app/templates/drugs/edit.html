@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Drug - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12 m10 offset-m1 l8 offset-l2">
+        <h4 class="page-title">Edit Drug</h4>
+        
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">{{ drug.name }} ({{ drug.brand }})</span>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">medical_services</i>
+                            {{ form.name }}
+                            <label for="{{ form.name.id_for_label }}" {% if form.name.value %}class="active"{% endif %}>Drug Name</label>
+                            {% if form.name.errors %}
+                                <span class="red-text">{{ form.name.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">business</i>
+                            {{ form.brand }}
+                            <label for="{{ form.brand.id_for_label }}" {% if form.brand.value %}class="active"{% endif %}>Brand</label>
+                            {% if form.brand.errors %}
+                                <span class="red-text">{{ form.brand.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">category</i>
+                            {{ form.category }}
+                            <label>Category</label>
+                            {% if form.category.errors %}
+                                <span class="red-text">{{ form.category.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">receipt_long</i>
+                            {{ form.batch_number }}
+                            <label for="{{ form.batch_number.id_for_label }}" {% if form.batch_number.value %}class="active"{% endif %}>Batch Number</label>
+                            {% if form.batch_number.errors %}
+                                <span class="red-text">{{ form.batch_number.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">description</i>
+                            {{ form.description }}
+                            <label for="{{ form.description.id_for_label }}" {% if form.description.value %}class="active"{% endif %}>Description</label>
+                            {% if form.description.errors %}
+                                <span class="red-text">{{ form.description.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m6 l3">
+                            <i class="material-icons prefix">inventory</i>
+                            {{ form.stock_quantity }}
+                            <label for="{{ form.stock_quantity.id_for_label }}" {% if form.stock_quantity.value %}class="active"{% endif %}>Stock Quantity</label>
+                            {% if form.stock_quantity.errors %}
+                                <span class="red-text">{{ form.stock_quantity.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6 l3">
+                            <i class="material-icons prefix">low_priority</i>
+                            {{ form.reorder_level }}
+                            <label for="{{ form.reorder_level.id_for_label }}" {% if form.reorder_level.value %}class="active"{% endif %}>Reorder Level</label>
+                            {% if form.reorder_level.errors %}
+                                <span class="red-text">{{ form.reorder_level.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6 l3">
+                            <i class="material-icons prefix">attach_money</i>
+                            {{ form.cost_price }}
+                            <label for="{{ form.cost_price.id_for_label }}" {% if form.cost_price.value %}class="active"{% endif %}>Cost Price ($)</label>
+                            {% if form.cost_price.errors %}
+                                <span class="red-text">{{ form.cost_price.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6 l3">
+                            <i class="material-icons prefix">monetization_on</i>
+                            {{ form.selling_price }}
+                            <label for="{{ form.selling_price.id_for_label }}" {% if form.selling_price.value %}class="active"{% endif %}>Selling Price ($)</label>
+                            {% if form.selling_price.errors %}
+                                <span class="red-text">{{ form.selling_price.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">event</i>
+                            {{ form.expiry_date }}
+                            <label for="{{ form.expiry_date.id_for_label }}" {% if form.expiry_date.value %}class="active"{% endif %}>Expiry Date</label>
+                            {% if form.expiry_date.errors %}
+                                <span class="red-text">{{ form.expiry_date.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col s12 m6">
+                            <p>
+                                <label>
+                                    {{ form.is_active }}
+                                    <span>Active</span>
+                                </label>
+                            </p>
+                            {% if form.is_active.errors %}
+                                <span class="red-text">{{ form.is_active.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="card-panel red lighten-4">
+                            <span class="red-text">{{ form.non_field_errors.0 }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col s12 center-align">
+                            <button class="btn waves-effect waves-light" type="submit">
+                                Update Drug <i class="material-icons right">save</i>
+                            </button>
+                            <a href="{% url 'drug_detail' drug.id %}" class="btn waves-effect waves-light red">
+                                Cancel <i class="material-icons right">cancel</i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoice #{{ sale.invoice_number }} - Pharmacy Management System{% endblock %}
+
+{% block extra_css %}
+<style type="text/css">
+    @media print {
+        body {
+            background-color: #fff;
+            font-size: 12pt;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .page-title, .print-btn, .green {
+            display: none !important;
+        }
+        
+        .card {
+            box-shadow: none;
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .card-content {
+            padding: 0;
+        }
+        
+        .card-action {
+            display: none;
+        }
+        
+        header, footer, nav, aside {
+            display: none;
+        }
+    }
+    
+    .invoice-header {
+        padding-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .invoice-company {
+        margin-bottom: 20px;
+    }
+    
+    .invoice-title {
+        font-size: 24px;
+        font-weight: 300;
+        margin-bottom: 15px;
+    }
+    
+    .invoice-details {
+        margin-top: 20px;
+    }
+    
+    .invoice-table {
+        margin-top: 40px;
+    }
+    
+    .invoice-total {
+        margin-top: 20px;
+    }
+    
+    .signature-area {
+        margin-top: 50px;
+    }
+    
+    .invoice-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        text-align: center;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <h4 class="page-title no-print">
+            Invoice
+            <button class="btn green right print-btn" onclick="window.print()">
+                <i class="material-icons left">print</i> Print Invoice
+            </button>
+            <a href="{% url 'sale_invoice' sale.id %}?pdf=1" class="btn blue right print-btn" style="margin-right: 10px;">
+                <i class="material-icons left">file_download</i> Download PDF
+            </a>
+        </h4>
+        
+        <div class="card">
+            <div class="card-content">
+                <!-- Invoice Header -->
+                <div class="invoice-header">
+                    <div class="row">
+                        <div class="col s12 m6 invoice-company">
+                            <h5>{{ company_name }}</h5>
+                            <p>{{ company_address }}</p>
+                            <p>Phone: {{ company_phone }}</p>
+                            <p>Email: {{ company_email }}</p>
+                        </div>
+                        
+                        <div class="col s12 m6 right-align">
+                            <h4 class="invoice-title">INVOICE</h4>
+                            <p><strong>Invoice #:</strong> {{ sale.invoice_number }}</p>
+                            <p><strong>Date:</strong> {{ sale.date|date:"F j, Y" }}</p>
+                            <p><strong>Time:</strong> {{ sale.date|date:"g:i a" }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Invoice Details -->
+                <div class="invoice-details">
+                    <div class="row">
+                        <div class="col s12 m6">
+                            <h5>Bill To:</h5>
+                            {% if sale.patient %}
+                                <p><strong>{{ sale.patient.full_name }}</strong></p>
+                                <p>{{ sale.patient.address|default:"" }}</p>
+                                <p>Phone: {{ sale.patient.phone_number }}</p>
+                                {% if sale.patient.email %}
+                                <p>Email: {{ sale.patient.email }}</p>
+                                {% endif %}
+                            {% else %}
+                                <p>Walk-in Customer</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col s12 m6 right-align">
+                            <h5>Payment Information:</h5>
+                            <p><strong>Method:</strong> {{ sale.payment_method }}</p>
+                            <p><strong>Status:</strong> {{ sale.payment_status }}</p>
+                            <p><strong>Served By:</strong> {{ sale.user.username }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Invoice Items -->
+                <div class="invoice-table">
+                    <table class="striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Item</th>
+                                <th class="center-align">Quantity</th>
+                                <th class="right-align">Unit Price</th>
+                                <th class="right-align">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ item.drug_name }}</td>
+                                <td class="center-align">{{ item.quantity }}</td>
+                                <td class="right-align">${{ item.price|floatformat:2 }}</td>
+                                <td class="right-align">${{ item.total_price|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Invoice Total -->
+                <div class="invoice-total">
+                    <div class="row">
+                        <div class="col s12 m6 offset-m6">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <th>Subtotal:</th>
+                                        <td class="right-align">${{ sale.subtotal|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tax:</th>
+                                        <td class="right-align">${{ sale.tax|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Discount:</th>
+                                        <td class="right-align">${{ sale.discount|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th><strong>TOTAL:</strong></th>
+                                        <td class="right-align"><strong>${{ sale.total_amount|floatformat:2 }}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notes -->
+                {% if sale.notes %}
+                <div class="row" style="margin-top: 30px;">
+                    <div class="col s12">
+                        <h5>Notes:</h5>
+                        <p>{{ sale.notes }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Signature Area -->
+                <div class="signature-area">
+                    <div class="row">
+                        <div class="col s6">
+                            <p style="border-top: 1px solid #ddd; padding-top: 10px;">Pharmacist Signature</p>
+                        </div>
+                        
+                        <div class="col s6">
+                            <p style="border-top: 1px solid #ddd; padding-top: 10px;">Patient/Customer Signature</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Invoice Footer -->
+                <div class="invoice-footer">
+                    <p>Thank you for your business!</p>
+                    <p>{{ company_name }} - {{ company_address }} - {{ company_phone }}</p>
+                </div>
+            </div>
+            
+            <div class="card-action no-print">
+                <a href="{% url 'sale_detail' sale.id %}">Back to Sale Details</a>
+                <button class="btn green right" onclick="window.print()">
+                    <i class="material-icons left">print</i> Print Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
