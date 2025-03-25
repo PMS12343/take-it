@@ -12,25 +12,19 @@
                 <div class="section">
                     <h5 class="center-align">Login</h5>
                     
-                    <form method="post">
+                    <form method="post" action="{% url 'login' %}">
                         {% csrf_token %}
                         
                         <div class="input-field">
                             <i class="material-icons prefix">person</i>
-                            {{ form.username }}
-                            <label for="{{ form.username.id_for_label }}">Username</label>
-                            {% if form.username.errors %}
-                                <span class="red-text">{{ form.username.errors.0 }}</span>
-                            {% endif %}
+                            <input type="text" id="username" name="username" class="validate" required>
+                            <label for="username">Username</label>
                         </div>
                         
                         <div class="input-field">
                             <i class="material-icons prefix">lock</i>
-                            {{ form.password }}
-                            <label for="{{ form.password.id_for_label }}">Password</label>
-                            {% if form.password.errors %}
-                                <span class="red-text">{{ form.password.errors.0 }}</span>
-                            {% endif %}
+                            <input type="password" id="password" name="password" class="validate" required>
+                            <label for="password">Password</label>
                         </div>
                         
                         {% if form.non_field_errors %}
@@ -40,7 +34,7 @@
                         {% endif %}
                         
                         <div class="center-align" style="margin-top: 20px;">
-                            <button class="btn waves-effect waves-light" type="submit">
+                            <button class="btn waves-effect waves-light green darken-1" type="submit">
                                 Login <i class="material-icons right">send</i>
                             </button>
                         </div>
