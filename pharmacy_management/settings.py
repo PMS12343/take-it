@@ -19,6 +19,12 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
+# CSRF settings - allow Replit domains
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.replit.dev',
+    'https://*.replit.app',
+]
+
 # Application definition
 
 INSTALLED_APPS = [
