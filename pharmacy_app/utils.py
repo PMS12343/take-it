@@ -3,6 +3,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 from django.shortcuts import redirect
 from django.contrib import messages
+from django.db import models
 from functools import wraps
 from datetime import timedelta
 import xhtml2pdf.pisa as pisa
