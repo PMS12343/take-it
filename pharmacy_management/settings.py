@@ -123,6 +123,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Currency settings
+CURRENCY_SYMBOL = 'IQD'
+CURRENCY_CODE = 'IQD'
+CURRENCY_DECIMAL_PLACES = 0  # IQD typically doesn't use decimal places
+
 # Authentication settings
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
