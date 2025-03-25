@@ -11,12 +11,14 @@ from .models import (
 class UserLoginForm(AuthenticationForm):
     """Form for user login"""
     username = forms.CharField(widget=forms.TextInput(attrs={
-        'class': 'form-control',
-        'placeholder': 'Username'
+        'class': 'validate',
+        'placeholder': 'Username',
+        'id': 'id_username'
     }))
     password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control',
-        'placeholder': 'Password'
+        'class': 'validate',
+        'placeholder': 'Password',
+        'id': 'id_password'
     }))
 
 class UserRegistrationForm(UserCreationForm):

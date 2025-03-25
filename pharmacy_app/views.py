@@ -37,17 +37,23 @@ def login_view(request):
         return redirect('dashboard')
         
     if request.method == 'POST':
+        print(f"Login attempt with: {request.POST.get('username')}")
         form = UserLoginForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
+            print(f"Form is valid. Authenticating user: {username}")
             user = authenticate(username=username, password=password)
             if user is not None:
+                print(f"Authentication successful for user: {username}")
                 login(request, user)
                 next_url = request.GET.get('next', 'dashboard')
                 return redirect(next_url)
             else:
+                print(f"Authentication failed for user: {username}")
                 messages.error(request, "Invalid username or password.")
+        else:
+            print(f"Form validation errors: {form.errors}")
     else:
         form = UserLoginForm()
     
