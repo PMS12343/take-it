@@ -140,6 +140,17 @@
             z-index: 999;
         }
         
+        /* Fix for button clickability */
+        .btn, .btn-floating {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Fix for tooltips */
+        .tooltip {
+            z-index: 100;
+        }
+        
         @media print {
             .no-print {
                 display: none !important;

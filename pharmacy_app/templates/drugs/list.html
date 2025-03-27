@@ -7,12 +7,14 @@
     <div class="col s12">
         <h4 class="page-title">
             Drug Inventory
-            {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
-            <a href="{% url 'drug_add' %}" class="btn right tooltipped" data-position="left" data-tooltip="Add New Drug">
-                <i class="material-icons left">add</i> Add Drug
-            </a>
-            {% endif %}
         </h4>
+            {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+            <div class="right-align" style="margin-top: -15px; margin-bottom: 15px;">
+                <a href="{% url 'drug_add' %}" class="btn">
+                    <i class="material-icons left">add</i> Add Drug
+                </a>
+            </div>
+            {% endif %}
         
         <!-- Actions Menu -->
         <div class="card">
