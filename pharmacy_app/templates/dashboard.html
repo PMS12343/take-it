@@ -250,7 +250,8 @@ $(document).ready(function() {
     // Setup chart for top drugs
     var ctx = document.getElementById('top-drugs-chart').getContext('2d');
     var topDrugsChart = new Chart(ctx, {
-        type: 'horizontalBar',
+        type: 'bar',
+        indexAxis: 'y',
         data: {
             labels: [
                 {% for drug in top_drugs %}
@@ -273,11 +274,9 @@ $(document).ready(function() {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                xAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
+                x: {
+                    beginAtZero: true
+                }
             }
         }
     });
