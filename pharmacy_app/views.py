@@ -481,6 +481,61 @@ def sale_detail(request, sale_id):
     return render(request, 'sales/detail.html', context)
 
 @login_required
+@requires_role(['Admin'])
+def sale_edit(request, sale_id):
+    """Edit an existing sale"""
+    sale = get_object_or_404(Sale, id=sale_id)
+    
+    if request.method == 'POST':
+        form = SaleForm(request.POST, instance=sale)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Sale invoice #{sale.invoice_number} updated successfully.")
+            return redirect('sale_detail', sale_id=sale.id)
+    else:
+        form = SaleForm(instance=sale)
+    
+    return render(request, 'sales/edit.html', {
+        'form': form,
+        'sale': sale
+    })
+
+@login_required
+@requires_role(['Admin'])
+def sale_delete(request, sale_id):
+    """Delete a sale and return items to inventory"""
+    sale = get_object_or_404(Sale, id=sale_id)
+    
+    if request.method == 'POST':
+        invoice_number = sale.invoice_number
+        
+        # Return items to inventory
+        for item in sale.saleitems.all():
+            if item.drug:
+                # Update the drug stock
+                item.drug.stock_quantity += item.quantity
+                item.drug.save()
+                
+                # Log the inventory change
+                InventoryLog.objects.create(
+                    drug=item.drug,
+                    quantity_change=item.quantity,
+                    operation_type='RETURN',
+                    reference=f"Sale #{invoice_number} deleted",
+                    notes=f"Items returned to inventory due to sale deletion",
+                    user=request.user
+                )
+        
+        # Delete the sale
+        sale.delete()
+        
+        messages.success(request, f"Sale invoice #{invoice_number} has been deleted and items returned to inventory.")
+        return redirect('sale_list')
+    
+    # This should not be reached as deletion is handled via POST from modal
+    return redirect('sale_detail', sale_id=sale.id)
+
+@login_required
 def sale_invoice(request, sale_id):
     """Display and print invoice for a sale"""
     sale = get_object_or_404(Sale, id=sale_id)

@@ -100,6 +100,14 @@
                                 <a href="{% url 'sale_invoice' sale.id %}?pdf=1" class="btn-floating btn-small waves-effect waves-light green tooltipped" data-position="top" data-tooltip="Download PDF">
                                     <i class="material-icons">download</i>
                                 </a>
+                                {% if user.profile.role == 'Admin' %}
+                                <a href="{% url 'sale_edit' sale.id %}" class="btn-floating btn-small waves-effect waves-light blue-grey tooltipped" data-position="top" data-tooltip="Edit Sale">
+                                    <i class="material-icons">edit</i>
+                                </a>
+                                <a href="#delete-modal-{{ sale.id }}" class="btn-floating btn-small waves-effect waves-light red tooltipped modal-trigger" data-position="top" data-tooltip="Delete Sale">
+                                    <i class="material-icons">delete</i>
+                                </a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -118,4 +126,35 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modals -->
+{% for sale in sales %}
+<div id="delete-modal-{{ sale.id }}" class="modal">
+    <div class="modal-content">
+        <h4 class="red-text">Delete Sale</h4>
+        <p>Are you sure you want to delete this sale (Invoice #{{ sale.invoice_number }})?</p>
+        <p>This action <strong>cannot be undone</strong>. This will permanently delete the sale record and return all sold items to inventory.</p>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+        <form method="post" action="{% url 'sale_delete' sale.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="waves-effect waves-light btn red">
+                <i class="material-icons left">delete</i> Yes, Delete
+            </button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize tooltips and modals
+        $('.tooltipped').tooltip();
+        $('.modal').modal();
+    });
+</script>
 {% endblock %}

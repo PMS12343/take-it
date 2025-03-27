@@ -27,6 +27,8 @@ urlpatterns = [
     path('sales/new/', views.new_sale, name='new_sale'),
     path('sales/', views.sale_list, name='sale_list'),
     path('sales/<int:sale_id>/', views.sale_detail, name='sale_detail'),
+    path('sales/<int:sale_id>/edit/', views.sale_edit, name='sale_edit'),
+    path('sales/<int:sale_id>/delete/', views.sale_delete, name='sale_delete'),
     path('sales/<int:sale_id>/invoice/', views.sale_invoice, name='sale_invoice'),
     
     # Reports

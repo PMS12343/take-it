@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Sale - {{ sale.invoice_number }} - Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <h4 class="page-title">
+            Edit Sale
+            <span class="right">Invoice #{{ sale.invoice_number }}</span>
+        </h4>
+        
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Sale Information</span>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m6">
+                            {{ form.patient.label_tag }}
+                            {{ form.patient }}
+                            {% if form.patient.errors %}
+                            <span class="red-text">{{ form.patient.errors }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6">
+                            {{ form.payment_method.label_tag }}
+                            {{ form.payment_method }}
+                            {% if form.payment_method.errors %}
+                            <span class="red-text">{{ form.payment_method.errors }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12 m6">
+                            {{ form.payment_status.label_tag }}
+                            {{ form.payment_status }}
+                            {% if form.payment_status.errors %}
+                            <span class="red-text">{{ form.payment_status.errors }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m6">
+                            {{ form.discount.label_tag }}
+                            {{ form.discount }}
+                            {% if form.discount.errors %}
+                            <span class="red-text">{{ form.discount.errors }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
+                            {{ form.notes.label_tag }}
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <span class="red-text">{{ form.notes.errors }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-action">
+                        <a href="{% url 'sale_detail' sale.id %}" class="waves-effect waves-light btn-flat">Cancel</a>
+                        <button type="submit" class="waves-effect waves-light btn green right">
+                            <i class="material-icons left">save</i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sale Items (Read-only) -->
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">Items Sold</span>
+                <p class="grey-text">Note: Items can't be modified after the sale is created. If you need to change items, delete this sale and create a new one.</p>
+                
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Drug</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sale.saleitems.all %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item.drug_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>${{ item.price|floatformat:2 }}</td>
+                            <td>${{ item.total_price|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="4" class="right-align">Subtotal:</th>
+                            <td>${{ sale.subtotal|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th colspan="4" class="right-align">Tax:</th>
+                            <td>${{ sale.tax|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th colspan="4" class="right-align">Discount:</th>
+                            <td>${{ sale.discount|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th colspan="4" class="right-align">Total:</th>
+                            <td><strong>${{ sale.total_amount|floatformat:2 }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize select elements
+        $('select').formSelect();
+    });
+</script>
+{% endblock %}
