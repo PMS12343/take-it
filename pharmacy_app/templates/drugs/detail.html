@@ -40,6 +40,10 @@
                                     <td>{{ drug.batch_number|default:"N/A" }}</td>
                                 </tr>
                                 <tr>
+                                    <th>Barcode:</th>
+                                    <td>{{ drug.barcode|default:"No barcode assigned" }}</td>
+                                </tr>
+                                <tr>
                                     <th>Status:</th>
                                     <td>
                                         {% if drug.is_active %}

@@ -56,6 +56,18 @@
                     
                     <div class="row">
                         <div class="input-field col s12">
+                            <i class="material-icons prefix">qr_code_scanner</i>
+                            {{ form.barcode }}
+                            <label for="{{ form.barcode.id_for_label }}" {% if form.barcode.value %}class="active"{% endif %}>Barcode</label>
+                            {% if form.barcode.errors %}
+                                <span class="red-text">{{ form.barcode.errors.0 }}</span>
+                            {% endif %}
+                            <span class="helper-text">Scan or enter product barcode (optional)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="input-field col s12">
                             <i class="material-icons prefix">description</i>
                             {{ form.description }}
                             <label for="{{ form.description.id_for_label }}" {% if form.description.value %}class="active"{% endif %}>Description</label>
