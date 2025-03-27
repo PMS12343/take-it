@@ -14,24 +14,425 @@ import json
 import decimal
 import csv
 import xlsxwriter
+import openpyxl
+import os
+import re
+import tempfile
 from io import BytesIO
+from PIL import Image
+from pdf2image import convert_from_path, convert_from_bytes
+import pytesseract
+from fuzzywuzzy import fuzz, process
 
 from .models import (
     Drug, DrugCategory, Patient, Sale, SaleItem, 
-    InventoryLog, DrugInteraction, UserProfile
+    InventoryLog, DrugInteraction, UserProfile,
+    Supplier, InvoiceUpload, InvoiceItem
 )
 from .forms import (
     UserLoginForm, UserRegistrationForm, UserProfileForm,
     DrugForm, PatientForm, SaleForm, SaleItemFormSet,
-    DrugInteractionForm, DateRangeForm, DrugImportForm
+    DrugInteractionForm, DateRangeForm, DrugImportForm,
+    SupplierForm, InvoiceUploadForm, InvoiceItemMatchForm
 )
 from .utils import (
     render_to_pdf, check_role_permission, get_low_stock_drugs,
     get_expiring_drugs, requires_role
 )
 
+# Invoice Processing Functions
+def process_pdf_invoice(invoice):
+    """Process a PDF invoice using OCR to extract items"""
+    # Get file path
+    file_path = invoice.file.path
+    
+    # Convert PDF to images
+    images = convert_from_path(file_path)
+    
+    # Extract text from images using OCR
+    extracted_text = ""
+    for i, image in enumerate(images):
+        text = pytesseract.image_to_string(image)
+        extracted_text += f"\n\n---- PAGE {i+1} ----\n\n{text}"
+    
+    # Extract invoice details (if not already provided)
+    if not invoice.invoice_number:
+        # Look for invoice number patterns
+        invoice_number_patterns = [
+            r'invoice\s*#?\s*:?\s*([A-Za-z0-9\-]+)',
+            r'invoice\s*number\s*:?\s*([A-Za-z0-9\-]+)',
+            r'inv\s*#?\s*:?\s*([A-Za-z0-9\-]+)',
+        ]
+        
+        for pattern in invoice_number_patterns:
+            match = re.search(pattern, extracted_text, re.IGNORECASE)
+            if match:
+                invoice.invoice_number = match.group(1).strip()
+                invoice.save()
+                break
+    
+    # Extract invoice date (if not already provided)
+    if not invoice.invoice_date:
+        date_patterns = [
+            r'date\s*:?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+            r'invoice\s*date\s*:?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+        ]
+        
+        for pattern in date_patterns:
+            match = re.search(pattern, extracted_text, re.IGNORECASE)
+            if match:
+                date_str = match.group(1)
+                try:
+                    # Try different date formats
+                    for fmt in ['%d/%m/%Y', '%m/%d/%Y', '%d-%m-%Y', '%m-%d-%Y']:
+                        try:
+                            date_obj = datetime.strptime(date_str, fmt)
+                            invoice.invoice_date = date_obj
+                            invoice.save()
+                            break
+                        except ValueError:
+                            continue
+                except Exception:
+                    pass
+                break
+    
+    # Extract items from the invoice
+    # This is a simplified version; in a real system, this would be more sophisticated
+    # Look for tables of items, which typically have quantity, description, and price
+    
+    # Use regex patterns to find items with quantity and price
+    item_patterns = [
+        r'(\d+)\s*x?\s*([A-Za-z0-9\s\-\+]+)\s*\$?(\d+[\.,]\d{2})',  # Quantity, Name, Price
+        r'([A-Za-z0-9\s\-\+]+)\s*(\d+)\s*(?:tablets|capsules|units|pcs)\s*\$?(\d+[\.,]\d{2})',  # Name, Quantity, Price
+        r'([A-Za-z0-9\s\-\+]+)\s*(\d+)\s*(?:mg|ml|g)\s*\$?(\d+[\.,]\d{2})',  # Name, Strength, Price
+    ]
+    
+    items = []
+    for pattern in item_patterns:
+        matches = re.findall(pattern, extracted_text, re.IGNORECASE | re.MULTILINE)
+        for match in matches:
+            # The order of fields in the match may vary depending on the pattern
+            if re.match(r'\d+', match[0]):  # If first group is numeric, it's likely quantity
+                quantity = match[0]
+                name = match[1].strip()
+                price = match[2].replace(',', '.')
+            else:  # First group is likely the name
+                name = match[0].strip()
+                quantity = match[1]
+                price = match[2].replace(',', '.')
+            
+            # Extract brand if possible (often in parentheses)
+            brand = None
+            brand_match = re.search(r'\(([A-Za-z0-9\s\-\+]+)\)', name)
+            if brand_match:
+                brand = brand_match.group(1).strip()
+                name = name.replace(f"({brand})", "").strip()
+            
+            # Create invoice item
+            item = InvoiceItem.objects.create(
+                invoice=invoice,
+                extracted_name=name,
+                extracted_brand=brand,
+                extracted_quantity=quantity,
+                extracted_cost_price=price
+            )
+            items.append(item)
+    
+    return items
+
+def process_image_invoice(invoice):
+    """Process an image invoice using OCR to extract items"""
+    # Similar to PDF processing but starts with the image directly
+    file_path = invoice.file.path
+    
+    # Open the image
+    image = Image.open(file_path)
+    
+    # Extract text using OCR
+    extracted_text = pytesseract.image_to_string(image)
+    
+    # The rest is the same as PDF processing
+    # Extract invoice details (if not already provided)
+    if not invoice.invoice_number:
+        invoice_number_patterns = [
+            r'invoice\s*#?\s*:?\s*([A-Za-z0-9\-]+)',
+            r'invoice\s*number\s*:?\s*([A-Za-z0-9\-]+)',
+            r'inv\s*#?\s*:?\s*([A-Za-z0-9\-]+)',
+        ]
+        
+        for pattern in invoice_number_patterns:
+            match = re.search(pattern, extracted_text, re.IGNORECASE)
+            if match:
+                invoice.invoice_number = match.group(1).strip()
+                invoice.save()
+                break
+    
+    # Extract invoice date (if not already provided)
+    if not invoice.invoice_date:
+        date_patterns = [
+            r'date\s*:?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+            r'invoice\s*date\s*:?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+        ]
+        
+        for pattern in date_patterns:
+            match = re.search(pattern, extracted_text, re.IGNORECASE)
+            if match:
+                date_str = match.group(1)
+                try:
+                    # Try different date formats
+                    for fmt in ['%d/%m/%Y', '%m/%d/%Y', '%d-%m-%Y', '%m-%d-%Y']:
+                        try:
+                            date_obj = datetime.strptime(date_str, fmt)
+                            invoice.invoice_date = date_obj
+                            invoice.save()
+                            break
+                        except ValueError:
+                            continue
+                except Exception:
+                    pass
+                break
+    
+    # Extract items using the same patterns as the PDF function
+    item_patterns = [
+        r'(\d+)\s*x?\s*([A-Za-z0-9\s\-\+]+)\s*\$?(\d+[\.,]\d{2})',  # Quantity, Name, Price
+        r'([A-Za-z0-9\s\-\+]+)\s*(\d+)\s*(?:tablets|capsules|units|pcs)\s*\$?(\d+[\.,]\d{2})',  # Name, Quantity, Price
+        r'([A-Za-z0-9\s\-\+]+)\s*(\d+)\s*(?:mg|ml|g)\s*\$?(\d+[\.,]\d{2})',  # Name, Strength, Price
+    ]
+    
+    items = []
+    for pattern in item_patterns:
+        matches = re.findall(pattern, extracted_text, re.IGNORECASE | re.MULTILINE)
+        for match in matches:
+            # The order of fields in the match may vary depending on the pattern
+            if re.match(r'\d+', match[0]):  # If first group is numeric, it's likely quantity
+                quantity = match[0]
+                name = match[1].strip()
+                price = match[2].replace(',', '.')
+            else:  # First group is likely the name
+                name = match[0].strip()
+                quantity = match[1]
+                price = match[2].replace(',', '.')
+            
+            # Extract brand if possible (often in parentheses)
+            brand = None
+            brand_match = re.search(r'\(([A-Za-z0-9\s\-\+]+)\)', name)
+            if brand_match:
+                brand = brand_match.group(1).strip()
+                name = name.replace(f"({brand})", "").strip()
+            
+            # Create invoice item
+            item = InvoiceItem.objects.create(
+                invoice=invoice,
+                extracted_name=name,
+                extracted_brand=brand,
+                extracted_quantity=quantity,
+                extracted_cost_price=price
+            )
+            items.append(item)
+    
+    return items
+
+def process_excel_invoice(invoice):
+    """Process an Excel invoice to extract items"""
+    file_path = invoice.file.path
+    
+    # Load the Excel file
+    workbook = openpyxl.load_workbook(file_path, data_only=True)
+    sheet = workbook.active
+    
+    # Try to determine header row
+    header_row = None
+    name_col = None
+    quantity_col = None
+    price_col = None
+    brand_col = None
+    
+    # Look for common header names
+    for row_idx, row in enumerate(sheet.iter_rows(min_row=1, max_row=10), 1):
+        for col_idx, cell in enumerate(row, 1):
+            cell_value = str(cell.value).lower() if cell.value else ""
+            if cell_value:
+                if cell_value in ['item', 'description', 'product', 'name', 'drug name']:
+                    header_row = row_idx
+                    name_col = col_idx
+                elif cell_value in ['qty', 'quantity', 'amount']:
+                    header_row = row_idx
+                    quantity_col = col_idx
+                elif cell_value in ['price', 'unit price', 'cost', 'cost price']:
+                    header_row = row_idx
+                    price_col = col_idx
+                elif cell_value in ['brand', 'manufacturer']:
+                    header_row = row_idx
+                    brand_col = col_idx
+        
+        # If we found at least name and price columns, we can proceed
+        if header_row and name_col and price_col:
+            break
+    
+    # If no explicit headers found, assume first row is header
+    if not header_row:
+        header_row = 1
+        # Try to guess columns based on data types
+        for col_idx, cell in enumerate(next(sheet.iter_rows(min_row=1, max_row=1)), 1):
+            cell_value = str(cell.value).lower() if cell.value else ""
+            
+            # Check second row to see what kind of data is in each column
+            second_row_cell = sheet.cell(row=2, column=col_idx).value
+            
+            if second_row_cell:
+                if isinstance(second_row_cell, str) and len(second_row_cell) > 3:
+                    # Longer text is likely the name
+                    name_col = col_idx
+                elif isinstance(second_row_cell, (int, float)) and second_row_cell > 0 and second_row_cell < 1000:
+                    # Smaller numbers might be quantities
+                    if not quantity_col:
+                        quantity_col = col_idx
+                    # Larger numbers might be prices
+                    elif not price_col and second_row_cell > 1:
+                        price_col = col_idx
+    
+    # If still can't determine columns, make a best guess
+    if not name_col:
+        name_col = 1  # First column is often the name
+    
+    if not quantity_col:
+        quantity_col = 2  # Second column is often quantity
+    
+    if not price_col:
+        price_col = 3  # Third column is often price
+    
+    # Extract items from rows after the header
+    items = []
+    for row_idx, row in enumerate(sheet.iter_rows(min_row=header_row+1), header_row+1):
+        name_cell = sheet.cell(row=row_idx, column=name_col).value
+        
+        # Skip empty rows
+        if not name_cell:
+            continue
+        
+        # Get other cell values
+        quantity = sheet.cell(row=row_idx, column=quantity_col).value if quantity_col else None
+        price = sheet.cell(row=row_idx, column=price_col).value if price_col else None
+        brand = sheet.cell(row=row_idx, column=brand_col).value if brand_col else None
+        
+        # Skip rows where name is a header or subtotal
+        if name_cell and isinstance(name_cell, str):
+            if any(x in name_cell.lower() for x in ['total', 'subtotal', 'item', 'product', 'description']):
+                continue
+        
+        # Skip if missing essential data
+        if not name_cell or not price:
+            continue
+        
+        # Convert quantity to string
+        quantity_str = str(quantity) if quantity is not None else '1'
+        
+        # Convert price to string
+        price_str = str(price)
+        
+        # Create invoice item
+        item = InvoiceItem.objects.create(
+            invoice=invoice,
+            extracted_name=str(name_cell),
+            extracted_brand=str(brand) if brand else None,
+            extracted_quantity=quantity_str,
+            extracted_cost_price=price_str
+        )
+        items.append(item)
+    
+    return items
+
+def match_invoice_items(invoice):
+    """Match extracted invoice items with drugs in the database"""
+    # Get all drugs for matching
+    all_drugs = list(Drug.objects.values('id', 'name', 'brand'))
+    
+    # Get all items from this invoice
+    items = InvoiceItem.objects.filter(invoice=invoice)
+    
+    for item in items:
+        # Prepare the search terms
+        search_name = item.extracted_name.lower() if item.extracted_name else ""
+        search_brand = item.extracted_brand.lower() if item.extracted_brand else ""
+        
+        # Create search strings for matching
+        search_terms = []
+        if search_name:
+            search_terms.append(search_name)
+        if search_brand:
+            search_terms.append(search_brand)
+            if search_name:
+                search_terms.append(f"{search_name} {search_brand}")
+                search_terms.append(f"{search_brand} {search_name}")
+        
+        if not search_terms:
+            continue
+        
+        # Try to find matches using fuzzy string matching
+        best_match = None
+        best_score = 0
+        
+        for drug in all_drugs:
+            drug_name = drug['name'].lower() if drug['name'] else ""
+            drug_brand = drug['brand'].lower() if drug['brand'] else ""
+            
+            # Create strings to match against
+            match_strings = [drug_name]
+            if drug_brand:
+                match_strings.append(drug_brand)
+                match_strings.append(f"{drug_name} {drug_brand}")
+                match_strings.append(f"{drug_brand} {drug_name}")
+            
+            # Find the best match score between all combinations
+            for search in search_terms:
+                for match in match_strings:
+                    score = fuzz.ratio(search, match)
+                    
+                    # Adjust score if brand matches exactly
+                    if search_brand and drug_brand and search_brand == drug_brand:
+                        score += 20
+                    
+                    if score > best_score:
+                        best_score = score
+                        best_match = drug
+        
+        # Update the item with the match information
+        if best_match and best_score >= 70:  # 70% similarity threshold for a match
+            item.matched_drug_id = best_match['id']
+            item.match_status = 'MATCHED'
+            item.match_confidence = min(best_score, 100)  # Cap at 100
+            
+            # If we have quantity info, save it
+            if item.extracted_quantity:
+                try:
+                    quantity = int(float(item.extracted_quantity.replace(',', '.')))
+                    item.quantity = quantity
+                except (ValueError, TypeError):
+                    pass
+            
+            # If we have price info, save it
+            if item.extracted_cost_price:
+                try:
+                    cost_price = float(item.extracted_cost_price.replace(',', '.'))
+                    item.cost_price = cost_price
+                except (ValueError, TypeError):
+                    pass
+            
+            item.save()
+        elif best_match and best_score >= 50:  # 50-70% similarity is a partial match
+            item.matched_drug_id = best_match['id']
+            item.match_status = 'PARTIAL_MATCH'
+            item.match_confidence = best_score
+            item.save()
+        else:
+            # No good match found
+            item.match_status = 'UNMATCHED'
+            item.save()
+
 # Authentication Views
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 @ensure_csrf_cookie
 def login_view(request):
@@ -1120,3 +1521,254 @@ def get_drug_by_barcode(request):
         # Log the error
         print(f"Error in get_drug_by_barcode: {str(e)}")
         return JsonResponse({'error': f'An error occurred: {str(e)}', 'success': False}, status=500)
+
+# Supplier Management Views
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def supplier_list(request):
+    """List all suppliers"""
+    suppliers = Supplier.objects.all()
+    return render(request, 'suppliers/list.html', {'suppliers': suppliers})
+
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def supplier_add(request):
+    """Add a new supplier"""
+    if request.method == 'POST':
+        form = SupplierForm(request.POST)
+        if form.is_valid():
+            supplier = form.save(commit=False)
+            supplier.save()
+            messages.success(request, f"Supplier {supplier.name} added successfully.")
+            return redirect('supplier_list')
+    else:
+        form = SupplierForm()
+    
+    return render(request, 'suppliers/add.html', {'form': form})
+
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def supplier_edit(request, supplier_id):
+    """Edit an existing supplier"""
+    supplier = get_object_or_404(Supplier, id=supplier_id)
+    
+    if request.method == 'POST':
+        form = SupplierForm(request.POST, instance=supplier)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Supplier {supplier.name} updated successfully.")
+            return redirect('supplier_list')
+    else:
+        form = SupplierForm(instance=supplier)
+    
+    return render(request, 'suppliers/edit.html', {'form': form, 'supplier': supplier})
+
+# Invoice Parsing Views
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def invoice_list(request):
+    """List all uploaded invoices"""
+    invoices = InvoiceUpload.objects.all().order_by('-upload_date')
+    return render(request, 'invoices/list.html', {'invoices': invoices})
+
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def invoice_upload(request):
+    """Upload a new invoice for processing"""
+    if request.method == 'POST':
+        form = InvoiceUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            invoice = form.save(commit=False)
+            invoice.uploaded_by = request.user
+            invoice.save()
+            messages.success(request, "Invoice uploaded successfully. Processing will start shortly.")
+            return redirect('invoice_detail', invoice_id=invoice.id)
+    else:
+        form = InvoiceUploadForm()
+    
+    return render(request, 'invoices/upload.html', {'form': form})
+
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def invoice_detail(request, invoice_id):
+    """View invoice details and extracted items"""
+    invoice = get_object_or_404(InvoiceUpload, id=invoice_id)
+    items = invoice.items.all()
+    
+    context = {
+        'invoice': invoice,
+        'items': items,
+        'matched_items': items.filter(match_status__in=['MATCHED', 'MANUALLY_MATCHED']).count(),
+        'unmatched_items': items.filter(match_status='UNMATCHED').count(),
+        'partially_matched_items': items.filter(match_status='PARTIAL_MATCH').count(),
+        'ignored_items': items.filter(match_status='IGNORED').count(),
+    }
+    
+    return render(request, 'invoices/detail.html', context)
+
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def invoice_process(request, invoice_id):
+    """Process an uploaded invoice to extract items"""
+    invoice = get_object_or_404(InvoiceUpload, id=invoice_id)
+    
+    # Update status to processing
+    invoice.processing_status = 'PROCESSING'
+    invoice.save()
+    
+    try:
+        # Process based on file type
+        if invoice.file_type == 'PDF':
+            items = process_pdf_invoice(invoice)
+        elif invoice.file_type == 'IMAGE':
+            items = process_image_invoice(invoice)
+        elif invoice.file_type == 'EXCEL':
+            items = process_excel_invoice(invoice)
+        else:
+            messages.error(request, f"Unsupported file type: {invoice.file_type}")
+            invoice.processing_status = 'FAILED'
+            invoice.processing_notes = f"Unsupported file type: {invoice.file_type}"
+            invoice.save()
+            return redirect('invoice_detail', invoice_id=invoice.id)
+        
+        # Auto-match items with drugs in the database
+        match_invoice_items(invoice)
+        
+        # Update invoice status
+        invoice.total_items_found = invoice.items.count()
+        invoice.total_items_matched = invoice.items.filter(match_status__in=['MATCHED', 'MANUALLY_MATCHED']).count()
+        
+        if invoice.total_items_matched == 0:
+            invoice.processing_status = 'FAILED'
+            invoice.processing_notes = "No items could be matched to drugs in the database."
+        elif invoice.total_items_matched < invoice.total_items_found:
+            invoice.processing_status = 'PARTIALLY_PROCESSED'
+            invoice.processing_notes = f"{invoice.total_items_matched} out of {invoice.total_items_found} items matched."
+        else:
+            invoice.processing_status = 'COMPLETED'
+            invoice.processing_notes = "All items matched successfully."
+        
+        invoice.save()
+        
+        messages.success(request, f"Invoice processed. {invoice.total_items_matched} out of {invoice.total_items_found} items matched.")
+    except Exception as e:
+        invoice.processing_status = 'FAILED'
+        invoice.processing_notes = f"Error processing invoice: {str(e)}"
+        invoice.save()
+        messages.error(request, f"Error processing invoice: {str(e)}")
+    
+    return redirect('invoice_detail', invoice_id=invoice.id)
+
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def invoice_item_match(request, item_id):
+    """Manually match an invoice item to a drug"""
+    item = get_object_or_404(InvoiceItem, id=item_id)
+    
+    if request.method == 'POST':
+        form = InvoiceItemMatchForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            
+            # Update the invoice matched count
+            invoice = item.invoice
+            invoice.total_items_matched = invoice.items.filter(match_status__in=['MATCHED', 'MANUALLY_MATCHED']).count()
+            invoice.save()
+            
+            messages.success(request, "Item matched successfully.")
+            return redirect('invoice_detail', invoice_id=item.invoice.id)
+    else:
+        form = InvoiceItemMatchForm(instance=item)
+    
+    # Get all drugs for selection
+    drugs = Drug.objects.all()
+    
+    # If we have a name, try to find potential matches
+    suggested_matches = []
+    if item.extracted_name:
+        suggested_matches = Drug.objects.filter(
+            Q(name__icontains=item.extracted_name) | Q(brand__icontains=item.extracted_name)
+        ).distinct()[:5]
+    
+    context = {
+        'form': form,
+        'item': item,
+        'drugs': drugs,
+        'suggested_matches': suggested_matches,
+    }
+    
+    return render(request, 'invoices/match_item.html', context)
+
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def invoice_import(request, invoice_id):
+    """Import matched invoice items into inventory"""
+    invoice = get_object_or_404(InvoiceUpload, id=invoice_id)
+    
+    # Count matched items that haven't been imported yet
+    matched_items = invoice.items.filter(
+        match_status__in=['MATCHED', 'MANUALLY_MATCHED'], 
+        is_imported=False
+    )
+    
+    # If processing via POST, actually perform the import
+    if request.method == 'POST':
+        success_count = 0
+        error_messages = []
+        
+        for item in matched_items:
+            try:
+                # Update drug inventory
+                drug = item.matched_drug
+                old_quantity = drug.stock_quantity
+                
+                # If quantity was parsed as a string, try to convert it to int
+                if isinstance(item.quantity, str):
+                    try:
+                        quantity = int(item.quantity)
+                    except ValueError:
+                        quantity = 1  # Default to 1 if conversion fails
+                else:
+                    quantity = item.quantity if item.quantity else 1
+                
+                # Update drug quantity
+                drug.stock_quantity += quantity
+                
+                # Update cost price if available
+                if item.cost_price:
+                    drug.cost_price = item.cost_price
+                
+                drug.save()
+                
+                # Create inventory log entry
+                InventoryLog.objects.create(
+                    drug=drug,
+                    quantity_change=quantity,
+                    operation_type='ADD',
+                    reference=f"Invoice #{invoice.invoice_number or invoice.id}",
+                    user=request.user,
+                    notes=f"Added from invoice {invoice.invoice_number or invoice.id} from {invoice.supplier.name if invoice.supplier else 'Unknown supplier'}"
+                )
+                
+                # Mark item as imported
+                item.is_imported = True
+                item.save()
+                
+                success_count += 1
+            except Exception as e:
+                error_messages.append(f"Error importing {item.extracted_name}: {str(e)}")
+        
+        if success_count > 0:
+            messages.success(request, f"Successfully imported {success_count} items into inventory.")
+        
+        for error in error_messages:
+            messages.error(request, error)
+        
+        return redirect('invoice_detail', invoice_id=invoice.id)
+    
+    # For GET request, show confirmation page
+    return render(request, 'invoices/import_confirm.html', {
+        'invoice': invoice,
+        'matched_items': matched_items,
+        'total_items': matched_items.count(),
+    })

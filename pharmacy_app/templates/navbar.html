@@ -84,6 +84,16 @@
     <li><a href="{% url 'inventory_report' %}"><i class="material-icons">inventory</i>Inventory Report</a></li>
     {% endif %}
     
+    <!-- Supplier & Invoice Management -->
+    {% if user.profile.role == 'Admin' or user.profile.role == 'Manager' or user.profile.role == 'Pharmacist' %}
+    <li>
+        <a class="subheader">Suppliers & Invoices</a>
+    </li>
+    <li><a href="{% url 'supplier_list' %}"><i class="material-icons">local_shipping</i>Suppliers</a></li>
+    <li><a href="{% url 'invoice_list' %}"><i class="material-icons">receipt_long</i>Invoices</a></li>
+    <li><a href="{% url 'invoice_upload' %}"><i class="material-icons">upload_file</i>Upload Invoice</a></li>
+    {% endif %}
+
     <!-- User Management (Admin only) -->
     {% if user.profile.role == 'Admin' %}
     <li>

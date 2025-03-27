@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Import | Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary">
+            <i class="fas fa-file-import"></i> 
+            Confirm Import for Invoice: {{ invoice.invoice_number|default:"No Number" }}
+        </h2>
+        <a href="{% url 'invoice_detail' invoice.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Invoice
+        </a>
+    </div>
+
+    {% include 'partials/messages.html' %}
+
+    <div class="alert alert-warning">
+        <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Please Review Before Importing</h5>
+        <p>This action will update your inventory with the matched items from this invoice. Please review the items below before proceeding.</p>
+    </div>
+
+    <!-- Invoice Items Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h4>Items to Import ({{ total_items }})</h4>
+        </div>
+        <div class="card-body">
+            {% if matched_items %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Drug</th>
+                            <th>Current Stock</th>
+                            <th>Import Quantity</th>
+                            <th>Cost Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in matched_items %}
+                        <tr>
+                            <td>{{ item.matched_drug.name }} ({{ item.matched_drug.brand|default:"-" }})</td>
+                            <td>{{ item.matched_drug.stock_quantity }}</td>
+                            <td>{{ item.quantity|default:0 }}</td>
+                            <td>${{ item.cost_price|default:item.matched_drug.cost_price }}</td>
+                            <td>
+                                {% if item.match_status == 'MATCHED' %}
+                                <span class="badge bg-success">Matched</span>
+                                {% elif item.match_status == 'PARTIAL_MATCH' %}
+                                <span class="badge bg-warning">Partial Match</span>
+                                {% elif item.match_status == 'MANUALLY_MATCHED' %}
+                                <span class="badge bg-info">Manually Matched</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <form method="post" class="mt-3">
+                {% csrf_token %}
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-check"></i> Confirm Import
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No matched items to import. Please match items on the invoice detail page.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

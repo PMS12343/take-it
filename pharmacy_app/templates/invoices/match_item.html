@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Match Invoice Item | Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary">
+            <i class="fas fa-link"></i> Match Invoice Item
+        </h2>
+        <a href="{% url 'invoice_detail' item.invoice.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Invoice
+        </a>
+    </div>
+
+    {% include 'partials/messages.html' %}
+
+    <!-- Item Details Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h4>Extracted Item Information</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Name:</strong> {{ item.extracted_name }}</p>
+                    <p><strong>Brand:</strong> {{ item.extracted_brand|default:"Not specified" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Quantity:</strong> {{ item.extracted_quantity|default:"1" }}</p>
+                    <p><strong>Cost Price:</strong> ${{ item.extracted_cost_price|default:"0.00" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Match Form -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h4>Match to Drug</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.matched_drug.id_for_label }}" class="form-label">Select Drug*</label>
+                    {{ form.matched_drug }}
+                    {% if form.matched_drug.errors %}
+                    <div class="text-danger small">{{ form.matched_drug.errors }}</div>
+                    {% endif %}
+                    <div class="form-text">Choose the drug from inventory that matches this item</div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity*</label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}
+                        <div class="text-danger small">{{ form.quantity.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.cost_price.id_for_label }}" class="form-label">Cost Price*</label>
+                        {{ form.cost_price }}
+                        {% if form.cost_price.errors %}
+                        <div class="text-danger small">{{ form.cost_price.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.match_status.id_for_label }}" class="form-label">Match Status*</label>
+                    {{ form.match_status }}
+                    {% if form.match_status.errors %}
+                    <div class="text-danger small">{{ form.match_status.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Match
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

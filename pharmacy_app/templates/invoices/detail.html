@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Invoice Details | Pharmacy Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary">
+            <i class="fas fa-file-invoice"></i> 
+            Invoice: {{ invoice.invoice_number|default:"No Number" }}
+        </h2>
+        <div>
+            {% if invoice.processing_status == 'PENDING' %}
+            <a href="{% url 'invoice_process' invoice.id %}" class="btn btn-info me-2">
+                <i class="fas fa-cogs"></i> Process Invoice
+            </a>
+            {% elif invoice.processing_status == 'PROCESSED' %}
+            <a href="{% url 'invoice_import' invoice.id %}" class="btn btn-success me-2">
+                <i class="fas fa-file-import"></i> Import to Inventory
+            </a>
+            {% endif %}
+            <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Invoices
+            </a>
+        </div>
+    </div>
+
+    {% include 'partials/messages.html' %}
+
+    <!-- Invoice Details Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h4>Invoice Information</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Supplier:</strong> {{ invoice.supplier.name }}</p>
+                    <p><strong>Invoice Number:</strong> {{ invoice.invoice_number|default:"Not available" }}</p>
+                    <p><strong>Invoice Date:</strong> {{ invoice.invoice_date|default:"Not available"|date:"M d, Y" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Upload Date:</strong> {{ invoice.upload_date|date:"M d, Y H:i" }}</p>
+                    <p><strong>Status:</strong> 
+                        {% if invoice.processing_status == 'PENDING' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif invoice.processing_status == 'PROCESSED' %}
+                        <span class="badge bg-info">Processed</span>
+                        {% elif invoice.processing_status == 'COMPLETED' %}
+                        <span class="badge bg-success">Imported</span>
+                        {% elif invoice.processing_status == 'FAILED' %}
+                        <span class="badge bg-danger">Failed</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Items:</strong> {{ invoice.total_items_found }} found, {{ invoice.total_items_matched }} matched</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if invoice.processing_status != 'PENDING' %}
+    <!-- Extracted Items Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4>Extracted Items</h4>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-secondary" id="showAllItems">All</button>
+                <button class="btn btn-sm btn-outline-success" id="showMatchedItems">Matched</button>
+                <button class="btn btn-sm btn-outline-warning" id="showPartialItems">Partial</button>
+                <button class="btn btn-sm btn-outline-danger" id="showUnmatchedItems">Unmatched</button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if items %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="itemsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Extracted Name</th>
+                            <th>Brand</th>
+                            <th>Quantity</th>
+                            <th>Cost Price</th>
+                            <th>Match Status</th>
+                            <th>Matched Drug</th>
+                            <th>Confidence</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr class="item-row {% if item.match_status == 'MATCHED' %}matched{% elif item.match_status == 'PARTIAL_MATCH' %}partial{% elif item.match_status == 'UNMATCHED' %}unmatched{% endif %}">
+                            <td>{{ item.extracted_name }}</td>
+                            <td>{{ item.extracted_brand|default:"-" }}</td>
+                            <td>{{ item.extracted_quantity|default:"1" }}</td>
+                            <td>${{ item.extracted_cost_price|default:"0.00" }}</td>
+                            <td>
+                                {% if item.match_status == 'MATCHED' %}
+                                <span class="badge bg-success">Matched</span>
+                                {% elif item.match_status == 'PARTIAL_MATCH' %}
+                                <span class="badge bg-warning">Partial</span>
+                                {% elif item.match_status == 'UNMATCHED' %}
+                                <span class="badge bg-danger">Unmatched</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.matched_drug.name|default:"-" }}</td>
+                            <td>
+                                {% if item.match_confidence %}
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar
+                                        {% if item.match_confidence >= 80 %}bg-success
+                                        {% elif item.match_confidence >= 60 %}bg-info
+                                        {% elif item.match_confidence >= 40 %}bg-warning
+                                        {% else %}bg-danger{% endif %}"
+                                        role="progressbar" style="width: {{ item.match_confidence }}%;"
+                                        aria-valuenow="{{ item.match_confidence }}" aria-valuemin="0" aria-valuemax="100">
+                                        {{ item.match_confidence }}%
+                                    </div>
+                                </div>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'invoice_item_match' item.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-link"></i> Match
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No items have been extracted from this invoice yet. Process the invoice to extract items.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Item filtering
+        const showAllItems = document.getElementById('showAllItems');
+        const showMatchedItems = document.getElementById('showMatchedItems');
+        const showPartialItems = document.getElementById('showPartialItems');
+        const showUnmatchedItems = document.getElementById('showUnmatchedItems');
+        
+        if (showAllItems) {
+            showAllItems.addEventListener('click', function() {
+                document.querySelectorAll('.item-row').forEach(row => {
+                    row.style.display = '';
+                });
+            });
+        }
+        
+        if (showMatchedItems) {
+            showMatchedItems.addEventListener('click', function() {
+                document.querySelectorAll('.item-row').forEach(row => {
+                    if (row.classList.contains('matched')) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        if (showPartialItems) {
+            showPartialItems.addEventListener('click', function() {
+                document.querySelectorAll('.item-row').forEach(row => {
+                    if (row.classList.contains('partial')) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        if (showUnmatchedItems) {
+            showUnmatchedItems.addEventListener('click', function() {
+                document.querySelectorAll('.item-row').forEach(row => {
+                    if (row.classList.contains('unmatched')) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

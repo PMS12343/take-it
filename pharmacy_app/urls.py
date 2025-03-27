@@ -12,9 +12,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     
     # Drug Management
-
     path('drugs/import/', views.drug_import, name='drug_import'),
-
     path('drugs/', views.drug_list, name='drug_list'),
     path('drugs/add/', views.drug_add, name='drug_add'),
     path('drugs/<int:drug_id>/', views.drug_detail, name='drug_detail'),
@@ -43,6 +41,19 @@ urlpatterns = [
     path('users/', views.user_list, name='user_list'),
     path('users/add/', views.user_add, name='user_add'),
     path('users/<int:user_id>/edit/', views.user_edit, name='user_edit'),
+    
+    # Supplier Management
+    path('suppliers/', views.supplier_list, name='supplier_list'),
+    path('suppliers/add/', views.supplier_add, name='supplier_add'),
+    path('suppliers/<int:supplier_id>/edit/', views.supplier_edit, name='supplier_edit'),
+    
+    # Invoice Parsing
+    path('invoices/', views.invoice_list, name='invoice_list'),
+    path('invoices/upload/', views.invoice_upload, name='invoice_upload'),
+    path('invoices/<int:invoice_id>/', views.invoice_detail, name='invoice_detail'),
+    path('invoices/<int:invoice_id>/process/', views.invoice_process, name='invoice_process'),
+    path('invoices/<int:invoice_id>/import/', views.invoice_import, name='invoice_import'),
+    path('invoices/item/<int:item_id>/match/', views.invoice_item_match, name='invoice_item_match'),
     
     # API endpoints
     path('api/drugs/<int:drug_id>/info/', views.get_drug_info, name='get_drug_info'),
