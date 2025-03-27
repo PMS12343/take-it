@@ -13,6 +13,14 @@ def render_to_pdf(template_src, context_dict={}):
     """Generate PDF from HTML template with context data"""
     template = get_template(template_src)
     html = template.render(context_dict)
+    
+    # Fix CSS for xhtml2pdf
+    # The main issue is with selectors using :not() pseudo-class
+    # Replace problematic CSS with simpler alternatives
+    html = html.replace(':not([controls])', '.with-controls')
+    html = html.replace(':not(.btn-large)', '.btn-normal')
+    html = html.replace(':not(.btn)', '.non-btn')
+    
     result = io.BytesIO()
     pdf = pisa.pisaDocument(io.BytesIO(html.encode("UTF-8")), result)
     if not pdf.err:

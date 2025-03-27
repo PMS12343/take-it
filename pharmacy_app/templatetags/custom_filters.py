@@ -3,16 +3,25 @@ from django import template
 register = template.Library()
 
 @register.filter
-def sum_values(values):
-    """Custom filter to sum a list of values.
+def sum_values(value, arg=None):
+    """Custom filter to sum a list of values or add a value to a number.
     This is required because the name 'sum' would conflict with Python's built-in sum function.
     
     Example usage in templates:
-    {{ my_list|sum_values }}
+    {{ my_list|sum_values }}  # Sums items in a list
+    {{ number|sum_values:value_to_add }}  # Adds value_to_add to number
     """
-    if not values:
-        return 0
-    return sum(values)
+    if arg is None:
+        # Sum a list of values
+        if not value:
+            return 0
+        return sum(value)
+    else:
+        # Add arg to value
+        try:
+            return float(value) + float(arg)
+        except (ValueError, TypeError):
+            return 0
 
 @register.filter
 def sum(values, key=None):

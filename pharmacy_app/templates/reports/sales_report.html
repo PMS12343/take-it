@@ -313,10 +313,12 @@ $(document).ready(function() {
                     {% if top_drugs.count > 5 %}
                     {% with other_drugs=top_drugs|slice:"5:" %}
                     {% with other_total=0 %}
+                    {% with running_total=0 %}
                     {% for drug in other_drugs %}
-                    {% with other_total=other_total|add:drug.total_value %}{% endwith %}
+                        {% with running_total=running_total|sum_values:drug.total_value %}
+                        {% endwith %}
                     {% endfor %}
-                    {{ other_total }}
+                    {{ running_total }}
                     {% endwith %}
                     {% endwith %}
                     {% endif %}

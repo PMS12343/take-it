@@ -5,7 +5,8 @@ from django.forms import inlineformset_factory
 from django.utils import timezone
 from .models import (
     Drug, DrugCategory, Patient, Sale, SaleItem, 
-    InventoryLog, DrugInteraction, UserProfile
+    InventoryLog, DrugInteraction, UserProfile, Supplier,
+    InvoiceUpload, InvoiceItem
 )
 
 class UserLoginForm(AuthenticationForm):
@@ -218,3 +219,62 @@ class DrugImportForm(forms.Form):
         help_text='Upload an Excel file (.xlsx)',
         widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.xlsx'})
     )
+    
+    
+class SupplierForm(forms.ModelForm):
+    """Form for adding/editing suppliers"""
+    class Meta:
+        model = Supplier
+        fields = ['name', 'contact_person', 'address', 'email', 'phone', 'is_active', 'notes']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'contact_person': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+class InvoiceUploadForm(forms.ModelForm):
+    """Form for uploading invoices"""
+    class Meta:
+        model = InvoiceUpload
+        fields = ['supplier', 'invoice_number', 'invoice_date', 'file']
+        widgets = {
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
+            'invoice_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional - will be extracted if possible'}),
+            'invoice_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'file': forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.jpg,.jpeg,.png,.xlsx,.xls'}),
+        }
+    
+    def clean_file(self):
+        file = self.cleaned_data.get('file')
+        if file:
+            extension = file.name.split('.')[-1].lower()
+            if extension not in ['pdf', 'jpg', 'jpeg', 'png', 'xlsx', 'xls']:
+                raise forms.ValidationError("Unsupported file format. Please upload a PDF, image, or Excel file.")
+            
+            # Set the file type based on the extension
+            if extension in ['pdf']:
+                self.instance.file_type = 'PDF'
+            elif extension in ['jpg', 'jpeg', 'png']:
+                self.instance.file_type = 'IMAGE'
+            elif extension in ['xlsx', 'xls']:
+                self.instance.file_type = 'EXCEL'
+                
+        return file
+
+
+class InvoiceItemMatchForm(forms.ModelForm):
+    """Form for matching extracted invoice items to drugs"""
+    class Meta:
+        model = InvoiceItem
+        fields = ['matched_drug', 'quantity', 'cost_price', 'match_status']
+        widgets = {
+            'matched_drug': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'cost_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': 0}),
+            'match_status': forms.Select(attrs={'class': 'form-control'}),
+        }

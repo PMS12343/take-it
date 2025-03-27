@@ -208,3 +208,82 @@ class DrugInteraction(models.Model):
     
     def __str__(self):
         return f"Interaction between {self.drug_one} and {self.drug_two}: {self.severity}"
+
+
+class Supplier(models.Model):
+    """Model for drug suppliers/vendors"""
+    name = models.CharField(max_length=100)
+    contact_person = models.CharField(max_length=100, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
+
+
+class InvoiceUpload(models.Model):
+    """Model for storing uploaded supplier invoices"""
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending Processing'),
+        ('PROCESSING', 'Processing'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+        ('PARTIALLY_PROCESSED', 'Partially Processed'),
+    ]
+    
+    FILE_TYPE_CHOICES = [
+        ('PDF', 'PDF Document'),
+        ('IMAGE', 'Image'),
+        ('EXCEL', 'Excel Spreadsheet'),
+    ]
+    
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)
+    invoice_number = models.CharField(max_length=100, blank=True, null=True)
+    invoice_date = models.DateField(blank=True, null=True)
+    file = models.FileField(upload_to='invoice_uploads/')
+    file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    upload_date = models.DateTimeField(auto_now_add=True)
+    processing_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    processing_notes = models.TextField(blank=True, null=True)
+    total_items_found = models.IntegerField(default=0)
+    total_items_matched = models.IntegerField(default=0)
+    output_file = models.FileField(upload_to='invoice_outputs/', blank=True, null=True)
+    
+    def __str__(self):
+        return f"Invoice {self.invoice_number or 'Unknown'} - {self.supplier.name if self.supplier else 'Unknown'}"
+    
+    
+class InvoiceItem(models.Model):
+    """Model for individual items extracted from uploaded invoices"""
+    MATCH_STATUS_CHOICES = [
+        ('MATCHED', 'Matched to Drug'),
+        ('PARTIAL_MATCH', 'Partially Matched'),
+        ('UNMATCHED', 'No Match Found'),
+        ('MANUALLY_MATCHED', 'Manually Matched'),
+        ('IGNORED', 'Ignored'),
+    ]
+    
+    invoice = models.ForeignKey(InvoiceUpload, on_delete=models.CASCADE, related_name='items')
+    extracted_name = models.CharField(max_length=200)
+    extracted_brand = models.CharField(max_length=200, blank=True, null=True)
+    extracted_quantity = models.CharField(max_length=50, blank=True, null=True)
+    extracted_cost_price = models.CharField(max_length=50, blank=True, null=True)
+    extracted_batch_number = models.CharField(max_length=100, blank=True, null=True)
+    extracted_expiry_date = models.CharField(max_length=50, blank=True, null=True)
+    
+    quantity = models.PositiveIntegerField(blank=True, null=True)
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    match_status = models.CharField(max_length=20, choices=MATCH_STATUS_CHOICES, default='UNMATCHED')
+    matched_drug = models.ForeignKey(Drug, on_delete=models.SET_NULL, null=True, blank=True)
+    match_confidence = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    processing_notes = models.TextField(blank=True, null=True)
+    is_imported = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.extracted_name} ({self.get_match_status_display()})"

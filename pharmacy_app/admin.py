@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Drug, DrugCategory, Patient, Sale, SaleItem, InventoryLog, 
-    DrugInteraction, UserProfile
+    DrugInteraction, UserProfile, Supplier, InvoiceUpload, InvoiceItem
 )
 
 @admin.register(UserProfile)
@@ -54,3 +54,34 @@ class DrugInteractionAdmin(admin.ModelAdmin):
     list_display = ('drug_one', 'drug_two', 'severity', 'description')
     list_filter = ('severity',)
     search_fields = ('drug_one__name', 'drug_two__name', 'description')
+
+@admin.register(Supplier)
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = ('name', 'contact_person', 'email', 'phone', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'contact_person', 'email', 'phone')
+    readonly_fields = ('created_at', 'updated_at')
+    
+class InvoiceItemInline(admin.TabularInline):
+    model = InvoiceItem
+    extra = 0
+    fields = ('extracted_name', 'extracted_brand', 'extracted_quantity', 'extracted_cost_price', 
+              'match_status', 'matched_drug', 'match_confidence')
+    readonly_fields = ('match_confidence',)
+    
+@admin.register(InvoiceUpload)
+class InvoiceUploadAdmin(admin.ModelAdmin):
+    list_display = ('invoice_number', 'supplier', 'upload_date', 'processing_status', 
+                    'total_items_found', 'total_items_matched')
+    list_filter = ('processing_status', 'upload_date', 'supplier')
+    search_fields = ('invoice_number', 'supplier__name')
+    readonly_fields = ('upload_date', 'total_items_found', 'total_items_matched', 'processing_status')
+    inlines = [InvoiceItemInline]
+    
+@admin.register(InvoiceItem)
+class InvoiceItemAdmin(admin.ModelAdmin):
+    list_display = ('extracted_name', 'extracted_brand', 'extracted_quantity', 'extracted_cost_price', 
+                    'match_status', 'matched_drug', 'match_confidence')
+    list_filter = ('match_status', 'invoice__supplier')
+    search_fields = ('extracted_name', 'extracted_brand', 'matched_drug__name')
+    readonly_fields = ('match_confidence',)
