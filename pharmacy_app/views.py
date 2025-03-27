@@ -328,70 +328,91 @@ def patient_detail(request, patient_id):
 @requires_role(['Admin', 'Pharmacist', 'Sales Clerk'])
 def new_sale(request):
     """Create a new sale transaction"""
+    # Always initialize the formset variable to ensure it's defined in all code paths
+    formset = None
+    
     if request.method == 'POST':
+        print(f"Processing POST request for new sale. POST data: {request.POST.keys()}")
         form = SaleForm(request.POST)
+        
         if form.is_valid():
-            sale = form.save(commit=False)
-            sale.user = request.user
-            sale.save()
-            
-            formset = SaleItemFormSet(request.POST, instance=sale)
-            if formset.is_valid():
-                # Validate stock availability before saving
-                items_valid = True
-                for form in formset:
-                    if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
-                        drug = form.cleaned_data.get('drug')
-                        quantity = form.cleaned_data.get('quantity')
-                        
-                        if drug and drug.stock_quantity < quantity:
-                            messages.error(request, f"Not enough stock for {drug.name}. Available: {drug.stock_quantity}")
-                            items_valid = False
-                            break
+            try:
+                sale = form.save(commit=False)
+                sale.user = request.user
+                sale.save()
                 
-                if items_valid:
-                    # Save the formset
-                    items = formset.save(commit=False)
+                formset = SaleItemFormSet(request.POST, instance=sale)
+                print(f"Formset validity: {formset.is_valid()}")
+                print(f"Formset errors: {formset.errors if hasattr(formset, 'errors') else 'No errors'}")
+                
+                if formset.is_valid():
+                    # Validate stock availability before saving
+                    items_valid = True
+                    for form in formset:
+                        if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                            drug = form.cleaned_data.get('drug')
+                            quantity = form.cleaned_data.get('quantity')
+                            
+                            if drug and drug.stock_quantity < quantity:
+                                messages.error(request, f"Not enough stock for {drug.name}. Available: {drug.stock_quantity}")
+                                items_valid = False
+                                break
                     
-                    # Calculate sale totals
-                    subtotal = decimal.Decimal('0.00')
-                    for item in items:
-                        item.drug_name = item.drug.name if item.drug else "Unknown Drug"
-                        item.price = item.drug.selling_price if item.drug else decimal.Decimal('0.00')
-                        item.save()
-                        subtotal += item.price * item.quantity
-                    
-                    # Apply tax and discount calculations
-                    tax_amount = subtotal * decimal.Decimal('0.10')  # 10% tax example
-                    sale.subtotal = subtotal
-                    sale.tax = tax_amount
-                    sale.total_amount = subtotal + tax_amount - sale.discount
-                    sale.save()
-                    
-                    # Check for drug interactions
-                    interactions = check_drug_interactions(sale)
-                    if interactions:
-                        # Store in session to display on next page
-                        request.session['interaction_warnings'] = interactions
-                    
-                    messages.success(request, f"Sale recorded successfully. Invoice #: {sale.invoice_number}")
-                    return redirect('sale_detail', sale_id=sale.id)
+                    if items_valid:
+                        # Save the formset
+                        items = formset.save(commit=False)
+                        
+                        # Calculate sale totals
+                        subtotal = decimal.Decimal('0.00')
+                        for item in items:
+                            item.drug_name = item.drug.name if item.drug else "Unknown Drug"
+                            item.price = item.drug.selling_price if item.drug else decimal.Decimal('0.00')
+                            item.save()
+                            subtotal += item.price * item.quantity
+                        
+                        # Apply tax and discount calculations
+                        tax_amount = subtotal * decimal.Decimal('0.10')  # 10% tax example
+                        sale.subtotal = subtotal
+                        sale.tax = tax_amount
+                        sale.total_amount = subtotal + tax_amount - sale.discount
+                        sale.save()
+                        
+                        # Check for drug interactions
+                        interactions = check_drug_interactions(sale)
+                        if interactions:
+                            # Store in session to display on next page
+                            request.session['interaction_warnings'] = interactions
+                        
+                        messages.success(request, f"Sale recorded successfully. Invoice #: {sale.invoice_number}")
+                        return redirect('sale_detail', sale_id=sale.id)
+                    else:
+                        # If any item validation failed, delete the sale
+                        sale.delete()
+                        # Keep the user's formset data for better user experience
+                        formset = SaleItemFormSet(request.POST)
                 else:
-                    # If any item validation failed, delete the sale
+                    print(f"Sale item formset is invalid. Errors: {formset.errors}")
+                    messages.error(request, "There was an error with the sale items. Please check that you have at least one item with valid quantity.")
                     sale.delete()
-                    # Keep the user's formset data for better user experience
+                    # Keep the user's formset data
                     formset = SaleItemFormSet(request.POST)
-            else:
-                messages.error(request, "There was an error with the sale items.")
-                sale.delete()
-                # Keep the user's formset data
-                formset = SaleItemFormSet(request.POST)
+            except Exception as e:
+                print(f"Exception in sale processing: {str(e)}")
+                messages.error(request, f"An unexpected error occurred: {str(e)}")
+                # Make sure to delete the sale if it was created but not completed
+                if 'sale' in locals() and sale and sale.id:
+                    sale.delete()
         else:
+            print(f"Sale form is invalid. Errors: {form.errors}")
             messages.error(request, "There was an error with the sale information.")
             # Keep the user's formset data instead of resetting it
             formset = SaleItemFormSet(request.POST)
     else:
         form = SaleForm()
+        formset = SaleItemFormSet()
+    
+    # If formset is still None at this point, initialize it
+    if formset is None:
         formset = SaleItemFormSet()
     
     # Get all active drugs for the form

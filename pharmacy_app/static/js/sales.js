@@ -289,49 +289,71 @@ function setupFormValidation() {
     if (!saleForm) return;
     
     saleForm.addEventListener('submit', function(event) {
-        console.log('Form submission validation');
+        console.log('Form submission validation - checking form');
         let isValid = true;
         let hasItems = false;
+        let debugInfo = '';
         
-        // Check if there are any items
-        document.querySelectorAll('.sale-item-row').forEach(row => {
-            // Skip rows marked for deletion
-            const deleteCheckbox = row.querySelector('input[id$="-DELETE"]');
-            if (deleteCheckbox && deleteCheckbox.checked) return;
-            
-            const drugSelect = row.querySelector('select');
-            const quantityInput = row.querySelector('input[type="number"]');
-            
-            if (drugSelect && drugSelect.value && quantityInput && parseInt(quantityInput.value) > 0) {
-                hasItems = true;
-                
-                // Check stock availability only if we have stock data
-                if (row.dataset.stock && parseInt(quantityInput.value) > parseInt(row.dataset.stock)) {
-                    isValid = false;
-                    quantityInput.classList.add('invalid');
-                    M.toast({html: `Not enough stock for selected drug. Available: ${row.dataset.stock}`, classes: 'red'});
+        try {
+            // Check if there are any items
+            document.querySelectorAll('.sale-item-row').forEach(row => {
+                // Skip rows marked for deletion
+                const deleteCheckbox = row.querySelector('input[id$="-DELETE"]');
+                if (deleteCheckbox && deleteCheckbox.checked) {
+                    debugInfo += 'Found deleted row, skipping. ';
+                    return;
                 }
+                
+                const drugSelect = row.querySelector('select');
+                const quantityInput = row.querySelector('input[type="number"]');
+                
+                if (drugSelect && drugSelect.value && quantityInput && parseInt(quantityInput.value) > 0) {
+                    hasItems = true;
+                    debugInfo += `Found valid item: drug=${drugSelect.value}, qty=${quantityInput.value}. `;
+                    
+                    // Check stock availability only if we have stock data
+                    if (row.dataset.stock && parseInt(quantityInput.value) > parseInt(row.dataset.stock)) {
+                        debugInfo += `Stock validation failed: qty=${quantityInput.value}, available=${row.dataset.stock}. `;
+                        isValid = false;
+                        quantityInput.classList.add('invalid');
+                        M.toast({html: `Not enough stock for selected drug. Available: ${row.dataset.stock}`, classes: 'red'});
+                    }
+                } else if (drugSelect && drugSelect.value) {
+                    debugInfo += `Found drug but invalid quantity: drug=${drugSelect.value}, qty=${quantityInput ? quantityInput.value : 'missing'}. `;
+                } else if (quantityInput && parseInt(quantityInput.value) > 0) {
+                    debugInfo += `Found quantity but no drug selected: qty=${quantityInput.value}. `;
+                }
+            });
+            
+            if (!hasItems) {
+                debugInfo += 'No valid items found. ';
+                M.toast({html: 'Please add at least one item to the sale', classes: 'red'});
+                isValid = false;
             }
-        });
-        
-        if (!hasItems) {
-            M.toast({html: 'Please add at least one item to the sale', classes: 'red'});
-            isValid = false;
-        }
-        
-        // Check if patient is selected
-        const patientSelect = document.getElementById('id_patient');
-        if (patientSelect && !patientSelect.value) {
-            M.toast({html: 'Please select a patient', classes: 'red'});
-            isValid = false;
-        }
-        
-        if (!isValid) {
-            console.log('Form validation failed');
-            event.preventDefault();
-            M.toast({html: 'Please correct the errors before submitting', classes: 'red'});
-        } else {
-            console.log('Form validation successful');
+            
+            // Check if patient is selected
+            const patientSelect = document.getElementById('id_patient');
+            if (patientSelect && !patientSelect.value) {
+                debugInfo += 'No patient selected. ';
+                M.toast({html: 'Please select a patient', classes: 'red'});
+                isValid = false;
+            } else {
+                debugInfo += `Patient selected: ${patientSelect ? patientSelect.value : 'missing field'}. `;
+            }
+            
+            if (!isValid) {
+                console.log('Form validation failed: ' + debugInfo);
+                event.preventDefault();
+                M.toast({html: 'Please correct the errors before submitting', classes: 'red'});
+            } else {
+                console.log('Form validation successful: ' + debugInfo);
+                // Make sure form actually submits - allow normal browser submission
+            }
+        } catch(error) {
+            // If any error occurs in validation, log it but allow form to submit normally
+            console.error('Error during form validation:', error);
+            console.log('Allowing form submission despite validation error');
+            // Don't prevent default - let the server validate
         }
     });
 }

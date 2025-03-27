@@ -23,6 +23,7 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     'https://*.replit.dev',
     'https://*.replit.app',
+    'http://0.0.0.0:5000',
 ]
 
 # CSRF Cookie settings
