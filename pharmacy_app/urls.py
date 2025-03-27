@@ -12,6 +12,9 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     
     # Drug Management
+
+    path('drugs/import/', views.drug_import, name='drug_import'),
+
     path('drugs/', views.drug_list, name='drug_list'),
     path('drugs/add/', views.drug_add, name='drug_add'),
     path('drugs/<int:drug_id>/', views.drug_detail, name='drug_detail'),

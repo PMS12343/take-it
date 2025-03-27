@@ -209,3 +209,12 @@ class DateRangeForm(forms.Form):
             raise forms.ValidationError("End date must be after start date.")
         
         return cleaned_data
+
+
+class DrugImportForm(forms.Form):
+    """Form for importing drugs from Excel"""
+    excel_file = forms.FileField(
+        label='Excel File',
+        help_text='Upload an Excel file (.xlsx)',
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.xlsx'})
+    )

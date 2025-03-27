@@ -216,6 +216,80 @@ def drug_edit(request, drug_id):
     if request.method == 'POST':
         form = DrugForm(request.POST, instance=drug)
         if form.is_valid():
+
+
+@login_required
+@requires_role(['Admin', 'Pharmacist'])
+def drug_import(request):
+    """Import drugs from Excel file"""
+    if request.method == 'POST':
+        form = DrugImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            excel_file = request.FILES['excel_file']
+            
+            try:
+                from openpyxl import load_workbook
+                wb = load_workbook(excel_file)
+                ws = wb.active
+                
+                success_count = 0
+                error_count = 0
+                errors = []
+                
+                # Skip header row
+                for row in ws.iter_rows(min_row=2):
+                    try:
+                        drug_data = {
+                            'name': row[0].value,
+                            'brand': row[1].value,
+                            'description': row[2].value,
+                            'stock_quantity': int(row[3].value or 0),
+                            'cost_price': float(row[4].value or 0),
+                            'selling_price': float(row[5].value or 0),
+                            'reorder_level': int(row[6].value or 0),
+                            'expiry_date': row[7].value,
+                            'batch_number': row[8].value,
+                        }
+                        
+                        # Create or update drug
+                        drug, created = Drug.objects.update_or_create(
+                            name=drug_data['name'],
+                            brand=drug_data['brand'],
+                            defaults=drug_data
+                        )
+                        
+                        # Log the inventory addition if new drug
+                        if created:
+                            InventoryLog.objects.create(
+                                drug=drug,
+                                quantity_change=drug.stock_quantity,
+                                operation_type='ADD',
+                                notes="Initial stock from Excel import",
+                                user=request.user
+                            )
+                        
+                        success_count += 1
+                        
+                    except Exception as e:
+                        error_count += 1
+                        errors.append(f"Row {row[0].row}: {str(e)}")
+                
+                if success_count > 0:
+                    messages.success(request, f"Successfully imported {success_count} drugs.")
+                if error_count > 0:
+                    messages.warning(request, f"Failed to import {error_count} drugs. Check the logs for details.")
+                    for error in errors:
+                        messages.error(request, error)
+                
+                return redirect('drug_list')
+                
+            except Exception as e:
+                messages.error(request, f"Error processing file: {str(e)}")
+    else:
+        form = DrugImportForm()
+    
+    return render(request, 'drugs/import.html', {'form': form})
+
             updated_drug = form.save()
             
             # If stock quantity changed, log it

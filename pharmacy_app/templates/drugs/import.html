@@ -1,0 +1,35 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Import Drugs from Excel</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Import</button>
+                <a href="{% url 'drug_list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+            
+            <div class="mt-4">
+                <h4>Excel File Format:</h4>
+                <p>Your Excel file should have the following columns in order:</p>
+                <ol>
+                    <li>Name (required)</li>
+                    <li>Brand (required)</li>
+                    <li>Description</li>
+                    <li>Stock Quantity</li>
+                    <li>Cost Price</li>
+                    <li>Selling Price</li>
+                    <li>Reorder Level</li>
+                    <li>Expiry Date (YYYY-MM-DD)</li>
+                    <li>Batch Number</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
