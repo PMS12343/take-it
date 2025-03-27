@@ -7,11 +7,16 @@
     <div class="col s12">
         <h4 class="page-title">
             Drug Details
-            {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
-            <a href="{% url 'drug_edit' drug.id %}" class="btn-floating right tooltipped" data-position="left" data-tooltip="Edit Drug">
-                <i class="material-icons">edit</i>
-            </a>
-            {% endif %}
+            <div class="right">
+                <a href="{% url 'drug_list' %}" class="btn">
+                    <i class="material-icons left">arrow_back</i> Back to Drugs
+                </a>
+                {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+                <a href="{% url 'drug_edit' drug.id %}" class="btn blue tooltipped" data-position="left" data-tooltip="Edit Drug">
+                    <i class="material-icons left">edit</i> Edit Drug
+                </a>
+                {% endif %}
+            </div>
         </h4>
         
         <!-- Drug Information Card -->
@@ -107,12 +112,8 @@
                 </div>
             </div>
             
-            <div class="card-action">
-                <a href="{% url 'drug_list' %}">Back to All Drugs</a>
-                {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
-                <a href="{% url 'drug_edit' drug.id %}">Edit Drug</a>
-                {% endif %}
-            </div>
+            <!-- No card action links needed since we have them in the header -->
+            
         </div>
         
         <!-- Drug Interactions -->

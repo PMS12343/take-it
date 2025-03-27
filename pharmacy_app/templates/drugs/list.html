@@ -8,11 +8,26 @@
         <h4 class="page-title">
             Drug Inventory
             {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
-            <a href="{% url 'drug_add' %}" class="btn-floating right tooltipped" data-position="left" data-tooltip="Add New Drug">
-                <i class="material-icons">add</i>
+            <a href="{% url 'drug_add' %}" class="btn right tooltipped" data-position="left" data-tooltip="Add New Drug">
+                <i class="material-icons left">add</i> Add Drug
             </a>
             {% endif %}
         </h4>
+        
+        <!-- Actions Menu -->
+        <div class="card">
+            <div class="card-content">
+                <div class="row">
+                    <div class="col s12">
+                        {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
+                        <a href="{% url 'drug_import' %}" class="btn blue waves-effect waves-light tooltipped" data-position="top" data-tooltip="Import drugs from Excel">
+                            <i class="material-icons left">cloud_upload</i> Import Drugs
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- Search and Filters -->
         <div class="card">

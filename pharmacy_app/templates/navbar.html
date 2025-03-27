@@ -55,9 +55,6 @@
         <a class="subheader">Drug Management</a>
     </li>
     <li><a href="{% url 'drug_list' %}"><i class="material-icons">medical_services</i>Drugs</a></li>
-    {% if user.profile.role == 'Admin' or user.profile.role == 'Pharmacist' %}
-    <li><a href="{% url 'drug_add' %}"><i class="material-icons">add_circle</i>Add Drug</a></li>
-    {% endif %}
     
     <!-- Patient Management -->
     <li>
