@@ -1,3 +1,4 @@
+
 from django import template
 from decimal import Decimal
 
@@ -12,12 +13,10 @@ def multiply(value, arg):
     except (ValueError, TypeError):
         return 0
 
-
-from django import template
-
-register = template.Library()
-
-@register.filter
-def sum(values):
-    return sum(values)
-    
+@register.filter(name='sum')
+def sum_values(values):
+    """Sum the values in an iterable."""
+    try:
+        return sum(values)
+    except (ValueError, TypeError):
+        return 0
