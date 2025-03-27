@@ -164,13 +164,13 @@ def process_pdf_invoice(invoice):
                 brand = brand_match.group(1).strip()
                 name = name.replace(f"({brand})", "").strip()
             
-            # Create invoice item using the safe creation function
-            item = create_safe_invoice_item(
+            # Create invoice item
+            item = InvoiceItem.objects.create(
                 invoice=invoice,
-                name=name,
-                brand=brand,
-                quantity=quantity,
-                price=price
+                extracted_name=name,
+                extracted_brand=brand,
+                extracted_quantity=quantity,
+                extracted_cost_price=price
             )
             items.append(item)
     
@@ -270,13 +270,13 @@ def process_image_invoice(invoice):
                 brand = brand_match.group(1).strip()
                 name = name.replace(f"({brand})", "").strip()
             
-            # Create invoice item using the safe creation function
-            item = create_safe_invoice_item(
+            # Create invoice item
+            item = InvoiceItem.objects.create(
                 invoice=invoice,
-                name=name,
-                brand=brand,
-                quantity=quantity,
-                price=price
+                extracted_name=name,
+                extracted_brand=brand,
+                extracted_quantity=quantity,
+                extracted_cost_price=price
             )
             items.append(item)
     
@@ -392,13 +392,13 @@ def process_excel_invoice(invoice):
         # Convert price to string
         price_str = str(price)
         
-        # Create invoice item using the safe creation function
-        item = create_safe_invoice_item(
+        # Create invoice item
+        item = InvoiceItem.objects.create(
             invoice=invoice,
-            name=str(name_cell),
-            brand=str(brand) if brand else None,
-            quantity=quantity_str,
-            price=price_str
+            extracted_name=str(name_cell),
+            extracted_brand=str(brand) if brand else None,
+            extracted_quantity=quantity_str,
+            extracted_cost_price=price_str
         )
         items.append(item)
     

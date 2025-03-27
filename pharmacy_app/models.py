@@ -270,8 +270,8 @@ class InvoiceItem(models.Model):
     ]
     
     invoice = models.ForeignKey(InvoiceUpload, on_delete=models.CASCADE, related_name='items')
-    extracted_name = models.CharField(max_length=200)
-    extracted_brand = models.CharField(max_length=200, blank=True, null=True)
+    extracted_name = models.CharField(max_length=500)  # Increased from 200 to 500
+    extracted_brand = models.CharField(max_length=255, blank=True, null=True)  # Increased from 200 to 255
     extracted_quantity = models.CharField(max_length=50, blank=True, null=True)
     extracted_cost_price = models.CharField(max_length=50, blank=True, null=True)
     extracted_batch_number = models.CharField(max_length=100, blank=True, null=True)
