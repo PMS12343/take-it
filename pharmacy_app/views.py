@@ -485,13 +485,20 @@ def sale_detail(request, sale_id):
 def sale_edit(request, sale_id):
     """Edit an existing sale"""
     sale = get_object_or_404(Sale, id=sale_id)
+    original_discount = sale.discount
     
     if request.method == 'POST':
         form = SaleForm(request.POST, instance=sale)
         if form.is_valid():
-            form.save()
-            messages.success(request, f"Sale invoice #{sale.invoice_number} updated successfully.")
-            return redirect('sale_detail', sale_id=sale.id)
+            updated_sale = form.save(commit=False)
+            
+            # If discount has changed, recalculate the total amount
+            if updated_sale.discount != original_discount:
+                updated_sale.total_amount = (updated_sale.subtotal + updated_sale.tax) - updated_sale.discount
+            
+            updated_sale.save()
+            messages.success(request, f"Sale invoice #{updated_sale.invoice_number} updated successfully.")
+            return redirect('sale_detail', sale_id=updated_sale.id)
     else:
         form = SaleForm(instance=sale)
     
