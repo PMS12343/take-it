@@ -379,11 +379,14 @@ def new_sale(request):
                 else:
                     # If any item validation failed, delete the sale
                     sale.delete()
+                    formset = SaleItemFormSet()  # Initialize a fresh formset
             else:
                 messages.error(request, "There was an error with the sale items.")
                 sale.delete()
+                formset = SaleItemFormSet()  # Initialize a fresh formset
         else:
             messages.error(request, "There was an error with the sale information.")
+            formset = SaleItemFormSet()  # Initialize a fresh formset
     else:
         form = SaleForm()
         formset = SaleItemFormSet()
