@@ -88,6 +88,20 @@
                             <input id="barcode_search" type="text" name="barcode" value="{{ barcode }}" 
                                 placeholder="Scan or enter barcode to find drug" autocomplete="off">
                             <label for="barcode_search">Barcode Search</label>
+                            
+                            <button type="button" id="scanBarcodeSearchBtn" class="btn blue waves-effect waves-light" style="margin-top: 10px;">
+                                <i class="material-icons left">camera_alt</i> Scan with Camera
+                            </button>
+                            <div id="searchScannerContainer" style="display: none; margin-top: 15px;">
+                                <div class="card-panel">
+                                    <video id="searchBarcodeVideo" style="width: 100%; max-height: 300px; object-fit: cover;"></video>
+                                    <div class="center-align" style="margin-top: 10px;">
+                                        <button type="button" id="stopSearchScanBtn" class="btn red waves-effect waves-light">
+                                            <i class="material-icons left">close</i> Cancel Scan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -170,4 +184,108 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- QuaggaJS for barcode scanning -->
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.2/dist/quagga.min.js"></script>
+<script>
+    $(document).ready(function() {
+        const scanBarcodeSearchBtn = document.getElementById('scanBarcodeSearchBtn');
+        const stopSearchScanBtn = document.getElementById('stopSearchScanBtn');
+        const searchScannerContainer = document.getElementById('searchScannerContainer');
+        const searchBarcodeVideo = document.getElementById('searchBarcodeVideo');
+        const barcodeSearchInput = document.getElementById('barcode_search');
+        
+        // Check if the device has a camera
+        const hasCamera = () => {
+            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        };
+        
+        // Hide scan button if no camera is available
+        if (!hasCamera()) {
+            scanBarcodeSearchBtn.style.display = 'none';
+        }
+        
+        // Start barcode scanning
+        scanBarcodeSearchBtn.addEventListener('click', function() {
+            searchScannerContainer.style.display = 'block';
+            scanBarcodeSearchBtn.style.display = 'none';
+            
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: searchBarcodeVideo,
+                    constraints: {
+                        facingMode: "environment", // Use the back camera on mobile
+                        width: { min: 640 },
+                        height: { min: 480 }
+                    },
+                },
+                locator: {
+                    patchSize: "medium",
+                    halfSample: true
+                },
+                decoder: {
+                    readers: [
+                        "code_128_reader",
+                        "ean_reader",
+                        "ean_8_reader",
+                        "code_39_reader",
+                        "code_39_vin_reader",
+                        "codabar_reader",
+                        "upc_reader",
+                        "upc_e_reader",
+                        "i2of5_reader"
+                    ]
+                },
+                multiple: false
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    M.toast({html: 'Error accessing camera: ' + err});
+                    searchScannerContainer.style.display = 'none';
+                    scanBarcodeSearchBtn.style.display = 'inline-block';
+                    return;
+                }
+                
+                // Start barcode detection
+                Quagga.start();
+            });
+            
+            // Process detected barcodes
+            Quagga.onDetected(function(result) {
+                if (result && result.codeResult && result.codeResult.code) {
+                    const barcode = result.codeResult.code;
+                    barcodeSearchInput.value = barcode;
+                    
+                    // Trigger label animation for Materialize CSS
+                    M.updateTextFields();
+                    
+                    // Show success message
+                    M.toast({html: 'Barcode detected: ' + barcode});
+                    
+                    // Submit the form automatically to search for the drug
+                    barcodeSearchInput.form.submit();
+                    
+                    // Stop scanning
+                    stopSearchScanning();
+                }
+            });
+        });
+        
+        // Stop scanning function
+        function stopSearchScanning() {
+            if (Quagga) {
+                Quagga.stop();
+            }
+            searchScannerContainer.style.display = 'none';
+            scanBarcodeSearchBtn.style.display = 'inline-block';
+        }
+        
+        // Stop scan button event
+        stopSearchScanBtn.addEventListener('click', stopSearchScanning);
+    });
+</script>
 {% endblock %}

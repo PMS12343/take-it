@@ -90,6 +90,20 @@
                                 <i class="material-icons prefix">qr_code_scanner</i>
                                 <input id="barcode_scanner" type="text" placeholder="Scan or enter barcode here (optional)" autocomplete="off">
                                 <label for="barcode_scanner">Barcode Scanner</label>
+                                
+                                <button type="button" id="scanSalesBarcodeBtn" class="btn blue waves-effect waves-light" style="margin-top: 10px;">
+                                    <i class="material-icons left">camera_alt</i> Scan with Camera
+                                </button>
+                                <div id="salesScannerContainer" style="display: none; margin-top: 15px;">
+                                    <div class="card-panel">
+                                        <video id="salesBarcodeVideo" style="width: 100%; max-height: 300px; object-fit: cover;"></video>
+                                        <div class="center-align" style="margin-top: 10px;">
+                                            <button type="button" id="stopSalesScanBtn" class="btn red waves-effect waves-light">
+                                                <i class="material-icons left">close</i> Cancel Scan
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -264,4 +278,119 @@
 
 {% block extra_js %}
 <script src="/static/js/sales.js"></script>
+<!-- QuaggaJS for barcode scanning -->
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.2/dist/quagga.min.js"></script>
+<script>
+    $(document).ready(function() {
+        const scanSalesBarcodeBtn = document.getElementById('scanSalesBarcodeBtn');
+        const stopSalesScanBtn = document.getElementById('stopSalesScanBtn');
+        const salesScannerContainer = document.getElementById('salesScannerContainer');
+        const salesBarcodeVideo = document.getElementById('salesBarcodeVideo');
+        const barcodeScannerInput = document.getElementById('barcode_scanner');
+        
+        // Check if the device has a camera
+        const hasCamera = () => {
+            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        };
+        
+        // Hide scan button if no camera is available
+        if (!hasCamera()) {
+            scanSalesBarcodeBtn.style.display = 'none';
+        }
+        
+        // Start barcode scanning
+        scanSalesBarcodeBtn.addEventListener('click', function() {
+            salesScannerContainer.style.display = 'block';
+            scanSalesBarcodeBtn.style.display = 'none';
+            
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: salesBarcodeVideo,
+                    constraints: {
+                        facingMode: "environment", // Use the back camera on mobile
+                        width: { min: 640 },
+                        height: { min: 480 }
+                    },
+                },
+                locator: {
+                    patchSize: "medium",
+                    halfSample: true
+                },
+                decoder: {
+                    readers: [
+                        "code_128_reader",
+                        "ean_reader",
+                        "ean_8_reader",
+                        "code_39_reader",
+                        "code_39_vin_reader",
+                        "codabar_reader",
+                        "upc_reader",
+                        "upc_e_reader",
+                        "i2of5_reader"
+                    ]
+                },
+                multiple: false
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    M.toast({html: 'Error accessing camera: ' + err});
+                    salesScannerContainer.style.display = 'none';
+                    scanSalesBarcodeBtn.style.display = 'inline-block';
+                    return;
+                }
+                
+                // Start barcode detection
+                Quagga.start();
+            });
+            
+            // Process detected barcodes
+            Quagga.onDetected(function(result) {
+                if (result && result.codeResult && result.codeResult.code) {
+                    const barcode = result.codeResult.code;
+                    barcodeScannerInput.value = barcode;
+                    
+                    // Trigger label animation for Materialize CSS
+                    M.updateTextFields();
+                    
+                    // Show success message
+                    M.toast({html: 'Barcode detected: ' + barcode});
+                    
+                    // Process the barcode scan
+                    processBarcode(barcode);
+                    
+                    // Stop scanning
+                    stopSalesScanning();
+                }
+            });
+        });
+        
+        // Stop scanning function
+        function stopSalesScanning() {
+            if (Quagga) {
+                Quagga.stop();
+            }
+            salesScannerContainer.style.display = 'none';
+            scanSalesBarcodeBtn.style.display = 'inline-block';
+        }
+        
+        // Stop scan button event
+        stopSalesScanBtn.addEventListener('click', stopSalesScanning);
+        
+        // Function to process the barcode
+        function processBarcode(barcode) {
+            // We'll simply trigger the existing barcode processing from sales.js
+            // by simulating an "enter" keypress event
+            const event = new KeyboardEvent('keydown', {
+                'key': 'Enter',
+                'code': 'Enter',
+                'keyCode': 13,
+                'which': 13,
+                'bubbles': true
+            });
+            barcodeScannerInput.dispatchEvent(event);
+        }
+    });
+</script>
 {% endblock %}

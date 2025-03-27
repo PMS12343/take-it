@@ -68,6 +68,20 @@
                                 <span class="red-text">{{ form.barcode.errors.0 }}</span>
                             {% endif %}
                             <span class="helper-text">Scan or enter product barcode (optional)</span>
+                            
+                            <button type="button" id="scanBarcodeBtn" class="btn blue waves-effect waves-light" style="margin-top: 10px;">
+                                <i class="material-icons left">camera_alt</i> Scan with Camera
+                            </button>
+                            <div id="scannerContainer" style="display: none; margin-top: 15px;">
+                                <div class="card-panel">
+                                    <video id="barcodeVideo" style="width: 100%; max-height: 300px; object-fit: cover;"></video>
+                                    <div class="center-align" style="margin-top: 10px;">
+                                        <button type="button" id="stopScanBtn" class="btn red waves-effect waves-light">
+                                            <i class="material-icons left">close</i> Cancel Scan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -164,4 +178,105 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- QuaggaJS for barcode scanning -->
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.2/dist/quagga.min.js"></script>
+<script>
+    $(document).ready(function() {
+        const scanBarcodeBtn = document.getElementById('scanBarcodeBtn');
+        const stopScanBtn = document.getElementById('stopScanBtn');
+        const scannerContainer = document.getElementById('scannerContainer');
+        const barcodeVideo = document.getElementById('barcodeVideo');
+        const barcodeInput = document.getElementById('{{ form.barcode.id_for_label }}');
+        
+        // Check if the device has a camera
+        const hasCamera = () => {
+            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        };
+        
+        // Hide scan button if no camera is available
+        if (!hasCamera()) {
+            scanBarcodeBtn.style.display = 'none';
+        }
+        
+        // Start barcode scanning
+        scanBarcodeBtn.addEventListener('click', function() {
+            scannerContainer.style.display = 'block';
+            scanBarcodeBtn.style.display = 'none';
+            
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: barcodeVideo,
+                    constraints: {
+                        facingMode: "environment", // Use the back camera on mobile
+                        width: { min: 640 },
+                        height: { min: 480 }
+                    },
+                },
+                locator: {
+                    patchSize: "medium",
+                    halfSample: true
+                },
+                decoder: {
+                    readers: [
+                        "code_128_reader",
+                        "ean_reader",
+                        "ean_8_reader",
+                        "code_39_reader",
+                        "code_39_vin_reader",
+                        "codabar_reader",
+                        "upc_reader",
+                        "upc_e_reader",
+                        "i2of5_reader"
+                    ]
+                },
+                multiple: false
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    M.toast({html: 'Error accessing camera: ' + err});
+                    scannerContainer.style.display = 'none';
+                    scanBarcodeBtn.style.display = 'inline-block';
+                    return;
+                }
+                
+                // Start barcode detection
+                Quagga.start();
+            });
+            
+            // Process detected barcodes
+            Quagga.onDetected(function(result) {
+                if (result && result.codeResult && result.codeResult.code) {
+                    const barcode = result.codeResult.code;
+                    barcodeInput.value = barcode;
+                    
+                    // Trigger label animation for Materialize CSS
+                    M.updateTextFields();
+                    
+                    // Show success message
+                    M.toast({html: 'Barcode detected: ' + barcode});
+                    
+                    // Stop scanning
+                    stopScanning();
+                }
+            });
+        });
+        
+        // Stop scanning function
+        function stopScanning() {
+            if (Quagga) {
+                Quagga.stop();
+            }
+            scannerContainer.style.display = 'none';
+            scanBarcodeBtn.style.display = 'inline-block';
+        }
+        
+        // Stop scan button event
+        stopScanBtn.addEventListener('click', stopScanning);
+    });
+</script>
 {% endblock %}
