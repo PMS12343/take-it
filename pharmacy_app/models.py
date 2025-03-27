@@ -35,6 +35,7 @@ class Drug(models.Model):
     """Model for drug information and inventory"""
     name = models.CharField(max_length=100)
     brand = models.CharField(max_length=100)
+    barcode = models.CharField(max_length=100, blank=True, null=True, unique=True, help_text="Product barcode (optional)")
     description = models.TextField(blank=True, null=True)
     category = models.ForeignKey(DrugCategory, on_delete=models.SET_NULL, null=True, blank=True)
     stock_quantity = models.PositiveIntegerField(default=0)

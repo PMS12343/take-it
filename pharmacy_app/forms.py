@@ -68,12 +68,13 @@ class DrugForm(forms.ModelForm):
     """Form for adding/editing drugs"""
     class Meta:
         model = Drug
-        fields = ['name', 'brand', 'description', 'category', 'stock_quantity', 
+        fields = ['name', 'brand', 'barcode', 'description', 'category', 'stock_quantity', 
                   'cost_price', 'selling_price', 'reorder_level', 'expiry_date', 
                   'batch_number', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'brand': forms.TextInput(attrs={'class': 'form-control'}),
+            'barcode': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Scan or enter barcode'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'stock_quantity': forms.NumberInput(attrs={'class': 'form-control'}),

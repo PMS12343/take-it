@@ -22,6 +22,9 @@ function initializeSalesForm() {
     
     // Set up form validation
     setupFormValidation();
+    
+    // Set up barcode scanner
+    setupBarcodeScanner();
 }
 
 /**
@@ -319,4 +322,126 @@ function setupFormValidation() {
             M.toast({html: 'Please correct the errors before submitting', classes: 'red'});
         }
     });
+}
+
+/**
+ * Set up barcode scanner functionality
+ */
+function setupBarcodeScanner() {
+    const barcodeInput = document.getElementById('barcode_scanner');
+    if (!barcodeInput) return;
+    
+    // Focus on the barcode input when the page loads
+    setTimeout(() => barcodeInput.focus(), 500);
+    
+    // Handle barcode input
+    barcodeInput.addEventListener('keydown', function(e) {
+        // Enter key
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const barcode = this.value.trim();
+            
+            if (barcode) {
+                fetchDrugByBarcode(barcode);
+                this.value = ''; // Clear the input
+            }
+        }
+    });
+    
+    // Re-focus on barcode scanner after any click on the page
+    document.addEventListener('click', function() {
+        setTimeout(() => barcodeInput.focus(), 100);
+    });
+}
+
+/**
+ * Fetch drug information by barcode
+ */
+function fetchDrugByBarcode(barcode) {
+    fetch(`/api/drugs/barcode/?barcode=${encodeURIComponent(barcode)}`)
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('No drug found with this barcode');
+                }
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                addDrugToForm(data);
+            } else {
+                M.toast({html: data.error || 'Error processing barcode', classes: 'red'});
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching drug by barcode:', error);
+            M.toast({html: error.message || 'Error fetching drug by barcode', classes: 'red'});
+        });
+}
+
+/**
+ * Add a drug to the form using data from the barcode scan
+ */
+function addDrugToForm(drugData) {
+    // Check if drug is already in the form
+    let existingRow = null;
+    let existingIndex = -1;
+    
+    document.querySelectorAll('.sale-item-row').forEach((row, index) => {
+        // Skip rows marked for deletion
+        const deleteCheckbox = row.querySelector('input[id$="-DELETE"]');
+        if (deleteCheckbox && deleteCheckbox.checked) return;
+        
+        const drugSelect = row.querySelector('select');
+        if (drugSelect && drugSelect.value === drugData.id.toString()) {
+            existingRow = row;
+            existingIndex = index;
+        }
+    });
+    
+    if (existingRow) {
+        // Update quantity of existing item
+        const quantityInput = document.getElementById(`id_saleitems-${existingIndex}-quantity`);
+        if (quantityInput) {
+            const currentQty = parseInt(quantityInput.value) || 0;
+            quantityInput.value = currentQty + 1;
+            
+            // Trigger the input event to update calculations
+            const event = new Event('input', { bubbles: true });
+            quantityInput.dispatchEvent(event);
+            
+            M.toast({html: `Added ${drugData.name} (now ${currentQty + 1})`, classes: 'green'});
+        }
+    } else {
+        // Add new item
+        const addButton = document.getElementById('add-more');
+        if (addButton) {
+            // First click the add button to create a new row
+            addButton.click();
+            
+            // Get the index of the new row
+            const totalForms = document.getElementById('id_saleitems-TOTAL_FORMS');
+            const newIndex = parseInt(totalForms.value) - 1;
+            
+            // Set the drug and quantity
+            const drugSelect = document.getElementById(`id_saleitems-${newIndex}-drug`);
+            const quantityInput = document.getElementById(`id_saleitems-${newIndex}-quantity`);
+            
+            if (drugSelect && quantityInput) {
+                drugSelect.value = drugData.id;
+                quantityInput.value = 1;
+                
+                // Update the select with Materialize
+                M.FormSelect.init(drugSelect);
+                
+                // Trigger the change event to fetch drug info
+                const changeEvent = new Event('change', { bubbles: true });
+                drugSelect.dispatchEvent(changeEvent);
+                
+                M.toast({html: `Added ${drugData.name}`, classes: 'green'});
+            }
+        }
+    }
 }

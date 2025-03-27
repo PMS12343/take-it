@@ -140,11 +140,15 @@ def drug_list(request):
     category_id = request.GET.get('category', '')
     stock_status = request.GET.get('stock_status', '')
     expiry_status = request.GET.get('expiry_status', '')
+    barcode = request.GET.get('barcode', '')
     
     drugs = Drug.objects.all()
     
     # Apply filters
-    if query:
+    if barcode:
+        # If barcode is provided, it takes priority over other filters
+        drugs = drugs.filter(barcode=barcode)
+    elif query:
         drugs = drugs.filter(Q(name__icontains=query) | Q(brand__icontains=query))
     
     if category_id:
@@ -172,6 +176,7 @@ def drug_list(request):
         'category_id': category_id,
         'stock_status': stock_status,
         'expiry_status': expiry_status,
+        'barcode': barcode,
     }
     
     return render(request, 'drugs/list.html', context)
@@ -963,3 +968,29 @@ def get_drug_info(request, drug_id):
         return JsonResponse(data)
     except Drug.DoesNotExist:
         return JsonResponse({'error': 'Drug not found'}, status=404)
+
+@login_required
+def get_drug_by_barcode(request):
+    """API to get drug information by barcode"""
+    barcode = request.GET.get('barcode', '')
+    
+    if not barcode:
+        return JsonResponse({'error': 'No barcode provided'}, status=400)
+    
+    try:
+        drug = Drug.objects.get(barcode=barcode, is_active=True)
+        
+        data = {
+            'id': drug.id,
+            'name': drug.name,
+            'brand': drug.brand,
+            'price': float(drug.selling_price),
+            'available_stock': drug.stock_quantity,
+            'expiry_date': drug.expiry_date.strftime('%Y-%m-%d'),
+            'is_expired': drug.is_expired(),
+            'success': True
+        }
+        
+        return JsonResponse(data)
+    except Drug.DoesNotExist:
+        return JsonResponse({'error': 'No drug found with this barcode', 'success': False}, status=404)

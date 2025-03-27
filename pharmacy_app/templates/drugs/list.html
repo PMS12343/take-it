@@ -63,6 +63,16 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Barcode Search -->
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">qr_code_scanner</i>
+                            <input id="barcode_search" type="text" name="barcode" value="{{ barcode }}" 
+                                placeholder="Scan or enter barcode to find drug" autocomplete="off">
+                            <label for="barcode_search">Barcode Search</label>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -76,6 +86,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Brand</th>
+                            <th>Barcode</th>
                             <th>Category</th>
                             <th>Stock</th>
                             <th>Cost Price</th>
@@ -92,6 +103,13 @@
                                 {% if not drug.is_active %}<span class="red-text">(Inactive)</span>{% endif %}
                             </td>
                             <td>{{ drug.brand }}</td>
+                            <td>
+                                {% if drug.barcode %}
+                                <span class="chip"><i class="material-icons left">qr_code</i>{{ drug.barcode }}</span>
+                                {% else %}
+                                <span class="grey-text">Not available</span>
+                                {% endif %}
+                            </td>
                             <td>{{ drug.category.name|default:"Uncategorized" }}</td>
                             <td class="{% if drug.stock_quantity == 0 %}red-text{% elif drug.is_low_stock %}orange-text{% else %}green-text{% endif %}">
                                 {{ drug.stock_quantity }}
