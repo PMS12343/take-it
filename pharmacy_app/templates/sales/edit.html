@@ -36,7 +36,7 @@
                     </div>
                     
                     <div class="row">
-                        <div class="input-field col s12 m6">
+                        <div class="input-field col s12 m4">
                             {{ form.payment_status.label_tag }}
                             {{ form.payment_status }}
                             {% if form.payment_status.errors %}
@@ -44,7 +44,15 @@
                             {% endif %}
                         </div>
                         
-                        <div class="input-field col s12 m6">
+                        <div class="input-field col s12 m4">
+                            {{ form.tax.label_tag }}
+                            {{ form.tax }}
+                            {% if form.tax.errors %}
+                            <span class="red-text">{{ form.tax.errors }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="input-field col s12 m4">
                             {{ form.discount.label_tag }}
                             {{ form.discount }}
                             {% if form.discount.errors %}

@@ -486,17 +486,38 @@ def sale_edit(request, sale_id):
     """Edit an existing sale"""
     sale = get_object_or_404(Sale, id=sale_id)
     original_discount = sale.discount
+    original_tax = sale.tax
     
     if request.method == 'POST':
         form = SaleForm(request.POST, instance=sale)
         if form.is_valid():
             updated_sale = form.save(commit=False)
             
-            # If discount has changed, recalculate the total amount
-            if updated_sale.discount != original_discount:
+            # If discount or tax has changed, recalculate the total amount
+            if updated_sale.discount != original_discount or updated_sale.tax != original_tax:
                 updated_sale.total_amount = (updated_sale.subtotal + updated_sale.tax) - updated_sale.discount
             
             updated_sale.save()
+            
+            # Create log entry for the edit
+            log_message = "Sale edited - "
+            if updated_sale.discount != original_discount:
+                log_message += f"Discount changed from ${original_discount} to ${updated_sale.discount}. "
+            if updated_sale.tax != original_tax:
+                log_message += f"Tax changed from ${original_tax} to ${updated_sale.tax}. "
+                
+            # Log changes for each drug in the sale if needed for audit purposes
+            for item in updated_sale.saleitems.all():
+                if item.drug:
+                    InventoryLog.objects.create(
+                        drug=item.drug,
+                        quantity_change=0,  # No quantity change for edits
+                        operation_type='ADJUST',
+                        reference=f"Sale #{updated_sale.invoice_number} edited",
+                        notes=log_message,
+                        user=request.user
+                    )
+            
             messages.success(request, f"Sale invoice #{updated_sale.invoice_number} updated successfully.")
             return redirect('sale_detail', sale_id=updated_sale.id)
     else:

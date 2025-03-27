@@ -126,11 +126,12 @@ class SaleForm(forms.ModelForm):
     """Form for creating sales"""
     class Meta:
         model = Sale
-        fields = ['patient', 'payment_method', 'payment_status', 'discount', 'notes']
+        fields = ['patient', 'payment_method', 'payment_status', 'tax', 'discount', 'notes']
         widgets = {
             'patient': forms.Select(attrs={'class': 'form-control'}),
             'payment_method': forms.TextInput(attrs={'class': 'form-control'}),
             'payment_status': forms.TextInput(attrs={'class': 'form-control'}),
+            'tax': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'discount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
