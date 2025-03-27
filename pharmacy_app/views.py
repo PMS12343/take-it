@@ -216,6 +216,25 @@ def drug_edit(request, drug_id):
     if request.method == 'POST':
         form = DrugForm(request.POST, instance=drug)
         if form.is_valid():
+            updated_drug = form.save()
+            
+            # Log any stock quantity changes
+            if updated_drug.stock_quantity != original_quantity:
+                quantity_change = updated_drug.stock_quantity - original_quantity
+                InventoryLog.objects.create(
+                    drug=updated_drug,
+                    quantity_change=quantity_change,
+                    operation_type='ADJUST',
+                    notes=f"Stock adjusted during drug edit",
+                    user=request.user
+                )
+            
+            messages.success(request, f"Drug {updated_drug.name} updated successfully.")
+            return redirect('drug_list')
+    else:
+        form = DrugForm(instance=drug)
+    
+    return render(request, 'drugs/edit.html', {'form': form, 'drug': drug})
 
 
 @login_required
@@ -289,27 +308,6 @@ def drug_import(request):
         form = DrugImportForm()
     
     return render(request, 'drugs/import.html', {'form': form})
-
-            updated_drug = form.save()
-            
-            # If stock quantity changed, log it
-            new_quantity = updated_drug.stock_quantity
-            if new_quantity != original_quantity:
-                quantity_change = new_quantity - original_quantity
-                InventoryLog.objects.create(
-                    drug=updated_drug,
-                    quantity_change=quantity_change,
-                    operation_type='ADJUST',
-                    notes="Stock adjustment during drug edit",
-                    user=request.user
-                )
-            
-            messages.success(request, f"Drug {updated_drug.name} updated successfully.")
-            return redirect('drug_list')
-    else:
-        form = DrugForm(instance=drug)
-    
-    return render(request, 'drugs/edit.html', {'form': form, 'drug': drug})
 
 @login_required
 @requires_role(['Admin', 'Pharmacist', 'Manager', 'Sales Clerk'])
