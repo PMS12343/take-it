@@ -42,3 +42,15 @@ def sum(values, key=None):
             except (TypeError, ValueError):
                 pass
         return total
+
+@register.filter
+def multiply(value, arg):
+    """Multiply a value by an argument.
+    
+    Example usage in templates:
+    {{ value|multiply:arg }}
+    """
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return 0

@@ -1,0 +1,178 @@
+Error while parsing CSS file
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/context.py", line 519, in parseExternal
+    result = self.parse(cssFile.getData())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 458, in parse
+    src, stylesheet = self._parseStylesheet(src)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 566, in _parseStylesheet
+    src, ruleset = self._parseRuleset(src)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 918, in _parseRuleset
+    src, selectors = self._parseSelectorGroup(src)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 928, in _parseSelectorGroup
+    src, selector = self._parseSelector(src)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 942, in _parseSelector
+    src, selector = self._parseSimpleSelector(src)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 999, in _parseSimpleSelector
+    src, selector = self._parseSelectorPseudo(src, selector)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 1080, in _parseSelectorPseudo
+    raise self.ParseError(msg, src, ctxsrc)
+xhtml2pdf.w3c.cssParser.CSSParseError: Selector Pseudo Function closing ')' not found:: (':not(', '[controls]){display:')
+@fontface, unknown value font-weight '400'
+
+@fontface, unknown value font-weight '300'
+
+@fontface, unknown value font-weight '400'
+
+Repeated font embed for roboto_00, skip new embed 
+
+Repeated font embed for roboto_10, skip new embed 
+
+Internal Server Error: /reports/sales/
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/pharmacy_app/utils.py", line 42, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/pharmacy_app/views.py", line 688, in sales_report
+    pdf = render_to_pdf('reports/sales_report.html', context)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/pharmacy_app/utils.py", line 17, in render_to_pdf
+    pdf = pisa.pisaDocument(io.BytesIO(html.encode("UTF-8")), result)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/document.py", line 139, in pisaDocument
+    context = pisaStory(
+              ^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/document.py", line 75, in pisaStory
+    pisaParser(src, context, default_css, xhtml, encoding, xml_output)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/parser.py", line 823, in pisaParser
+    context.parseCSS()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/context.py", line 690, in parseCSS
+    self.css = self.cssParser.parse(self.cssText)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 458, in parse
+    src, stylesheet = self._parseStylesheet(src)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 566, in _parseStylesheet
+    src, ruleset = self._parseRuleset(src)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 918, in _parseRuleset
+    src, selectors = self._parseSelectorGroup(src)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 928, in _parseSelectorGroup
+    src, selector = self._parseSelector(src)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 951, in _parseSelector
+    src, selectorB = self._parseSimpleSelector(src)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 999, in _parseSimpleSelector
+    src, selector = self._parseSelectorPseudo(src, selector)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 1080, in _parseSelectorPseudo
+    raise self.ParseError(msg, src, ctxsrc)
+xhtml2pdf.w3c.cssParser.CSSParseError: Selector Pseudo Function closing ')' not found:: (':not(', '.btn):not(.btn-large')
+[27/Mar/2025 11:47:23] "GET /reports/sales/?&export=pdf HTTP/1.1" 500 212347
+[27/Mar/2025 11:48:12] "GET / HTTP/1.1" 200 21747
+[27/Mar/2025 11:48:20] "GET /reports/sales/ HTTP/1.1" 200 38054
+Error while parsing CSS file
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/context.py", line 519, in parseExternal
+    result = self.parse(cssFile.getData())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 458, in parse
+    src, stylesheet = self._parseStylesheet(src)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 566, in _parseStylesheet
+    src, ruleset = self._parseRuleset(src)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 918, in _parseRuleset
+    src, selectors = self._parseSelectorGroup(src)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 928, in _parseSelectorGroup
+    src, selector = self._parseSelector(src)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 942, in _parseSelector
+    src, selector = self._parseSimpleSelector(src)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 999, in _parseSimpleSelector
+    src, selector = self._parseSelectorPseudo(src, selector)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 1080, in _parseSelectorPseudo
+    raise self.ParseError(msg, src, ctxsrc)
+xhtml2pdf.w3c.cssParser.CSSParseError: Selector Pseudo Function closing ')' not found:: (':not(', '[controls]){display:')
+@fontface, unknown value font-weight '400'
+
+@fontface, unknown value font-weight '300'
+
+@fontface, unknown value font-weight '400'
+
+Repeated font embed for roboto_00, skip new embed 
+
+Repeated font embed for roboto_10, skip new embed 
+
+Internal Server Error: /reports/sales/
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/django/contrib/auth/decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/pharmacy_app/utils.py", line 42, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/pharmacy_app/views.py", line 688, in sales_report
+    pdf = render_to_pdf('reports/sales_report.html', context)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/pharmacy_app/utils.py", line 17, in render_to_pdf
+    pdf = pisa.pisaDocument(io.BytesIO(html.encode("UTF-8")), result)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/document.py", line 139, in pisaDocument
+    context = pisaStory(
+              ^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/document.py", line 75, in pisaStory
+    pisaParser(src, context, default_css, xhtml, encoding, xml_output)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/parser.py", line 823, in pisaParser
+    context.parseCSS()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/context.py", line 690, in parseCSS
+    self.css = self.cssParser.parse(self.cssText)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 458, in parse
+    src, stylesheet = self._parseStylesheet(src)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 566, in _parseStylesheet
+    src, ruleset = self._parseRuleset(src)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 918, in _parseRuleset
+    src, selectors = self._parseSelectorGroup(src)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 928, in _parseSelectorGroup
+    src, selector = self._parseSelector(src)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 951, in _parseSelector
+    src, selectorB = self._parseSimpleSelector(src)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 999, in _parseSimpleSelector
+    src, selector = self._parseSelectorPseudo(src, selector)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/xhtml2pdf/w3c/cssParser.py", line 1080, in _parseSelectorPseudo
+    raise self.ParseError(msg, src, ctxsrc)
+xhtml2pdf.w3c.cssParser.CSSParseError: Selector Pseudo Function closing ')' not found:: (':not(', '.btn):not(.btn-large')
+[27/Mar/2025 11:48:25] "GET /reports/sales/?&export=pdf HTTP/1.1" 500 212325

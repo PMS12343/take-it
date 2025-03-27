@@ -1,0 +1,217 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Inventory Report</title>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3, h4 {
+            color: #2196F3;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f5f5f5;
+            color: #333;
+            font-weight: bold;
+            text-align: left;
+            padding: 8px;
+        }
+        td {
+            padding: 8px;
+        }
+        .summary-item {
+            display: inline-block;
+            width: 30%;
+            margin: 10px;
+            padding: 15px;
+            text-align: center;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .page-break {
+            page-break-after: always;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .warning {
+            color: #f44336;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Pharmacy Management System</h1>
+        <h2>Inventory Report</h2>
+        <p>Period: {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}</p>
+    </div>
+    
+    <div>
+        <h3>Summary</h3>
+        <table>
+            <tr>
+                <th>Total Drugs</th>
+                <th>Total Stock Value</th>
+                <th>Low Stock Items</th>
+                <th>Expiring Items</th>
+            </tr>
+            <tr>
+                <td>{{ drugs|length }}</td>
+                <td>${{ total_stock_value|floatformat:2 }}</td>
+                <td>{{ low_stock_drugs|length }}</td>
+                <td>{{ expiring_drugs|length }}</td>
+            </tr>
+        </table>
+    </div>
+    
+    {% if low_stock_drugs %}
+    <div>
+        <h3>Low Stock Drugs</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Drug Name</th>
+                    <th>Brand</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Reorder Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for drug in low_stock_drugs %}
+                <tr>
+                    <td>{{ drug.name }}</td>
+                    <td>{{ drug.brand }}</td>
+                    <td>{{ drug.category.name|default:"N/A" }}</td>
+                    <td>{{ drug.stock_quantity }}</td>
+                    <td>{{ drug.reorder_level }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    {% if expiring_drugs %}
+    <div>
+        <h3>Expiring Drugs (Within 2 Months)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Drug Name</th>
+                    <th>Brand</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Expiry Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for drug in expiring_drugs %}
+                <tr>
+                    <td>{{ drug.name }}</td>
+                    <td>{{ drug.brand }}</td>
+                    <td>{{ drug.category.name|default:"N/A" }}</td>
+                    <td>{{ drug.stock_quantity }}</td>
+                    <td>{{ drug.expiry_date|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    <div class="page-break"></div>
+    
+    <div>
+        <h3>Current Inventory</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Drug Name</th>
+                    <th>Brand</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Selling Price</th>
+                    <th>Expiry Date</th>
+                    <th>Stock Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for drug in drugs %}
+                <tr>
+                    <td>{{ drug.name }}</td>
+                    <td>{{ drug.brand }}</td>
+                    <td>{{ drug.category.name|default:"N/A" }}</td>
+                    <td>{{ drug.stock_quantity }}</td>
+                    <td>${{ drug.selling_price }}</td>
+                    <td>{{ drug.expiry_date|date:"M d, Y" }}</td>
+                    <td>${{ drug.stock_quantity|multiply:drug.cost_price|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <div>
+        <h3>Inventory Movement</h3>
+        {% if inventory_logs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Drug</th>
+                    <th>Quantity Change</th>
+                    <th>Operation</th>
+                    <th>Reference</th>
+                    <th>User</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in inventory_logs %}
+                <tr>
+                    <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                    <td>{{ log.drug.name|default:"N/A" }}</td>
+                    <td>{{ log.quantity_change }}</td>
+                    <td>{{ log.get_operation_type_display }}</td>
+                    <td>{{ log.reference|default:"N/A" }}</td>
+                    <td>{{ log.user.username|default:"N/A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No inventory movement recorded during this period.</p>
+        {% endif %}
+    </div>
+    
+    <div class="footer">
+        <p>Generated on {{ current_date|date:"F d, Y H:i:s" }} | Pharmacy Management System</p>
+    </div>
+</body>
+</html>

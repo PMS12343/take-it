@@ -685,7 +685,10 @@ def sales_report(request):
     if 'export' in request.GET:
         export_format = request.GET.get('export')
         if export_format == 'pdf':
-            pdf = render_to_pdf('reports/sales_report.html', context)
+            # Add current date to context for footer
+            context['current_date'] = timezone.now()
+            # Use a simplified template for PDF to avoid CSS parsing issues
+            pdf = render_to_pdf('reports/sales_report_pdf.html', context)
             if pdf:
                 response = HttpResponse(pdf, content_type='application/pdf')
                 filename = f"Sales_Report_{start_date.strftime('%Y-%m-%d')}_to_{end_date.strftime('%Y-%m-%d')}.pdf"
@@ -809,7 +812,10 @@ def inventory_report(request):
     if 'export' in request.GET:
         export_format = request.GET.get('export')
         if export_format == 'pdf':
-            pdf = render_to_pdf('reports/inventory_report.html', context)
+            # Add current date to context for footer
+            context['current_date'] = timezone.now()
+            # Use a simplified template for PDF to avoid CSS parsing issues
+            pdf = render_to_pdf('reports/inventory_report_pdf.html', context)
             if pdf:
                 response = HttpResponse(pdf, content_type='application/pdf')
                 filename = f"Inventory_Report_{start_date.strftime('%Y-%m-%d')}_to_{end_date.strftime('%Y-%m-%d')}.pdf"
