@@ -45,15 +45,29 @@ def process_pdf_invoice(invoice):
     """Process a PDF invoice using OCR to extract items"""
     # Get file path
     file_path = invoice.file.path
+    print(f"Processing PDF invoice: {file_path}")
     
-    # Convert PDF to images
-    images = convert_from_path(file_path)
+    # Check if file exists
+    if not os.path.exists(file_path):
+        print(f"Error: File not found: {file_path}")
+        raise FileNotFoundError(f"Invoice file not found: {file_path}")
     
-    # Extract text from images using OCR
-    extracted_text = ""
-    for i, image in enumerate(images):
-        text = pytesseract.image_to_string(image)
-        extracted_text += f"\n\n---- PAGE {i+1} ----\n\n{text}"
+    try:
+        # Convert PDF to images
+        print("Converting PDF to images...")
+        images = convert_from_path(file_path)
+        print(f"Converted PDF to {len(images)} images")
+        
+        # Extract text from images using OCR
+        extracted_text = ""
+        for i, image in enumerate(images):
+            print(f"Processing page {i+1} with OCR...")
+            text = pytesseract.image_to_string(image)
+            extracted_text += f"\n\n---- PAGE {i+1} ----\n\n{text}"
+            print(f"Extracted {len(text)} characters from page {i+1}")
+    except Exception as e:
+        print(f"Error in PDF processing: {str(e)}")
+        raise
     
     # Extract invoice details (if not already provided)
     if not invoice.invoice_number:
@@ -144,12 +158,26 @@ def process_image_invoice(invoice):
     """Process an image invoice using OCR to extract items"""
     # Similar to PDF processing but starts with the image directly
     file_path = invoice.file.path
+    print(f"Processing image invoice: {file_path}")
     
-    # Open the image
-    image = Image.open(file_path)
+    # Check if file exists
+    if not os.path.exists(file_path):
+        print(f"Error: File not found: {file_path}")
+        raise FileNotFoundError(f"Invoice file not found: {file_path}")
     
-    # Extract text using OCR
-    extracted_text = pytesseract.image_to_string(image)
+    try:
+        # Open the image
+        print(f"Opening image file...")
+        image = Image.open(file_path)
+        print(f"Image opened successfully: {image.format}, {image.size}")
+        
+        # Extract text using OCR
+        print("Applying OCR to image...")
+        extracted_text = pytesseract.image_to_string(image)
+        print(f"OCR extraction completed. Extracted {len(extracted_text)} characters")
+    except Exception as e:
+        print(f"Error in image processing: {str(e)}")
+        raise
     
     # The rest is the same as PDF processing
     # Extract invoice details (if not already provided)
@@ -235,10 +263,22 @@ def process_image_invoice(invoice):
 def process_excel_invoice(invoice):
     """Process an Excel invoice to extract items"""
     file_path = invoice.file.path
+    print(f"Processing Excel invoice: {file_path}")
     
-    # Load the Excel file
-    workbook = openpyxl.load_workbook(file_path, data_only=True)
-    sheet = workbook.active
+    # Check if file exists
+    if not os.path.exists(file_path):
+        print(f"Error: File not found: {file_path}")
+        raise FileNotFoundError(f"Invoice file not found: {file_path}")
+    
+    try:
+        # Load the Excel file
+        print("Loading Excel workbook...")
+        workbook = openpyxl.load_workbook(file_path, data_only=True)
+        sheet = workbook.active
+        print(f"Excel workbook loaded. Active sheet: {sheet.title}")
+    except Exception as e:
+        print(f"Error loading Excel file: {str(e)}")
+        raise
     
     # Try to determine header row
     header_row = None
@@ -1544,7 +1584,7 @@ def supplier_add(request):
     else:
         form = SupplierForm()
     
-    return render(request, 'suppliers/form.html', {'form': form})
+    return render(request, 'suppliers/form.html', {'form': form, 'title': 'Add Supplier'})
 
 @login_required
 @requires_role(['Admin', 'Pharmacist'])
@@ -1618,13 +1658,22 @@ def invoice_process(request, invoice_id):
     
     try:
         # Process based on file type
+        print(f"Processing invoice ID {invoice.id} with file type: {invoice.file_type}")
+        
         if invoice.file_type == 'PDF':
+            print("Starting PDF processing")
             items = process_pdf_invoice(invoice)
+            print(f"PDF processing completed with {len(items)} items")
         elif invoice.file_type == 'IMAGE':
+            print("Starting image processing")
             items = process_image_invoice(invoice)
+            print(f"Image processing completed with {len(items)} items")
         elif invoice.file_type == 'EXCEL':
+            print("Starting Excel processing")
             items = process_excel_invoice(invoice)
+            print(f"Excel processing completed with {len(items)} items")
         else:
+            print(f"Unsupported file type: {invoice.file_type}")
             messages.error(request, f"Unsupported file type: {invoice.file_type}")
             invoice.processing_status = 'FAILED'
             invoice.processing_notes = f"Unsupported file type: {invoice.file_type}"
@@ -1652,6 +1701,10 @@ def invoice_process(request, invoice_id):
         
         messages.success(request, f"Invoice processed. {invoice.total_items_matched} out of {invoice.total_items_found} items matched.")
     except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        print(f"Error in invoice processing: {str(e)}")
+        print(tb)
         invoice.processing_status = 'FAILED'
         invoice.processing_notes = f"Error processing invoice: {str(e)}"
         invoice.save()
