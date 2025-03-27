@@ -94,7 +94,8 @@
                             </button>
                             <div id="searchScannerContainer" style="display: none; margin-top: 15px;">
                                 <div class="card-panel">
-                                    <video id="searchBarcodeVideo" style="width: 100%; max-height: 300px; object-fit: cover;"></video>
+                                    <video id="searchBarcodeVideo" style="width: 100%; min-height: 250px; max-height: 300px; object-fit: cover; background-color: #000;"></video>
+                            <canvas class="drawingBuffer" style="display: none;"></canvas>
                                     <div class="center-align" style="margin-top: 10px;">
                                         <button type="button" id="stopSearchScanBtn" class="btn red waves-effect waves-light">
                                             <i class="material-icons left">close</i> Cancel Scan
@@ -219,8 +220,14 @@
                     target: searchBarcodeVideo,
                     constraints: {
                         facingMode: "environment", // Use the back camera on mobile
-                        width: { min: 640 },
-                        height: { min: 480 }
+                        width: { min: 300, ideal: 640, max: 1200 },
+                        height: { min: 200, ideal: 480, max: 900 }
+                    },
+                    area: { // This helps with aiming the camera properly
+                        top: "20%",
+                        right: "20%",
+                        left: "20%",
+                        bottom: "20%"
                     },
                 },
                 locator: {
