@@ -241,7 +241,7 @@ $(document).ready(function() {
                 backgroundColor: 'rgba(54, 162, 235, 0.5)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1,
-                yAxisID: 'y-axis-1'
+                yAxisID: 'y'
             }, {
                 label: 'Revenue ($)',
                 data: [
@@ -254,44 +254,41 @@ $(document).ready(function() {
                 backgroundColor: 'rgba(255, 99, 132, 0.5)',
                 borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 2,
-                yAxisID: 'y-axis-2'
+                yAxisID: 'y1'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                yAxes: [{
+                y: {
                     type: 'linear',
                     display: true,
                     position: 'left',
-                    id: 'y-axis-1',
-                    ticks: {
-                        beginAtZero: true
-                    },
-                    scaleLabel: {
+                    beginAtZero: true,
+                    title: {
                         display: true,
-                        labelString: 'Number of Sales'
+                        text: 'Number of Sales'
                     }
-                }, {
+                },
+                y1: {
                     type: 'linear',
                     display: true,
                     position: 'right',
-                    id: 'y-axis-2',
-                    gridLines: {
+                    grid: {
                         drawOnChartArea: false
                     },
+                    beginAtZero: true,
                     ticks: {
-                        beginAtZero: true,
-                        callback: function(value, index, values) {
+                        callback: function(value) {
                             return '$' + value;
                         }
                     },
-                    scaleLabel: {
+                    title: {
                         display: true,
-                        labelString: 'Revenue ($)'
+                        text: 'Revenue ($)'
                     }
-                }]
+                }
             }
         }
     });
@@ -314,7 +311,14 @@ $(document).ready(function() {
                     {{ drug.total_value }},
                     {% endfor %}
                     {% if top_drugs.count > 5 %}
-                    {{ top_drugs|slice:"5:"|dictsortreversed:"total_value"|slice:":"|sum:"total_value" }}
+                    {% with other_drugs=top_drugs|slice:"5:" %}
+                    {% with other_total=0 %}
+                    {% for drug in other_drugs %}
+                    {% with other_total=other_total|add:drug.total_value %}{% endwith %}
+                    {% endfor %}
+                    {{ other_total }}
+                    {% endwith %}
+                    {% endwith %}
                     {% endif %}
                 ],
                 backgroundColor: [
@@ -331,20 +335,22 @@ $(document).ready(function() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            legend: {
-                position: 'right'
-            },
-            tooltips: {
-                callbacks: {
-                    label: function(tooltipItem, data) {
-                        var dataset = data.datasets[tooltipItem.datasetIndex];
-                        var total = dataset.data.reduce(function(previousValue, currentValue, currentIndex, array) {
-                            return previousValue + currentValue;
-                        });
-                        var currentValue = dataset.data[tooltipItem.index];
-                        var percentage = Math.floor(((currentValue/total) * 100)+0.5);
-                        return data.labels[tooltipItem.index] + ': $' + currentValue.toFixed(2) + ' (' + percentage + '%)';
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            var dataset = context.dataset;
+                            var total = dataset.data.reduce(function(previousValue, currentValue) {
+                                return previousValue + currentValue;
+                            }, 0);
+                            var currentValue = dataset.data[context.dataIndex];
+                            var percentage = Math.floor(((currentValue/total) * 100)+0.5);
+                            return context.label + ': $' + currentValue.toFixed(2) + ' (' + percentage + '%)';
+                        }
                     }
+                },
+                legend: {
+                    position: 'right'
                 }
             }
         }

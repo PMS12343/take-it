@@ -23,7 +23,7 @@ from .models import (
 from .forms import (
     UserLoginForm, UserRegistrationForm, UserProfileForm,
     DrugForm, PatientForm, SaleForm, SaleItemFormSet,
-    DrugInteractionForm, DateRangeForm
+    DrugInteractionForm, DateRangeForm, DrugImportForm
 )
 from .utils import (
     render_to_pdf, check_role_permission, get_low_stock_drugs,
