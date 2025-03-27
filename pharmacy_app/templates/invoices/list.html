@@ -3,75 +3,82 @@
 {% block title %}Invoices | Pharmacy Management System{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary"><i class="fas fa-file-invoice"></i> Supplier Invoices</h2>
-        <a href="{% url 'invoice_upload' %}" class="btn btn-primary">
-            <i class="fas fa-upload"></i> Upload New Invoice
-        </a>
+<div class="container">
+    <div class="row">
+        <div class="col s12">
+            <h4 class="green-text">
+                <i class="material-icons left">receipt_long</i> Supplier Invoices
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col s12 right-align">
+            <a href="{% url 'invoice_upload' %}" class="btn-floating btn-large waves-effect waves-light green">
+                <i class="material-icons">file_upload</i>
+            </a>
+            <span class="hide-on-med-and-down" style="position: relative; top: -15px; right: 10px;">Upload New Invoice</span>
+        </div>
     </div>
 
     {% include 'partials/messages.html' %}
 
-    <div class="card shadow">
-        <div class="card-body">
+    <div class="card">
+        <div class="card-content">
             {% if invoices %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Invoice #</th>
-                            <th>Supplier</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Items Found</th>
-                            <th>Items Matched</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for invoice in invoices %}
-                        <tr>
-                            <td>{{ invoice.invoice_number|default:"N/A" }}</td>
-                            <td>{{ invoice.supplier.name }}</td>
-                            <td>{{ invoice.invoice_date|default:invoice.upload_date|date:"M d, Y" }}</td>
-                            <td>
-                                {% if invoice.processing_status == 'PENDING' %}
-                                <span class="badge bg-warning">Pending</span>
-                                {% elif invoice.processing_status == 'PROCESSED' %}
-                                <span class="badge bg-info">Processed</span>
-                                {% elif invoice.processing_status == 'COMPLETED' %}
-                                <span class="badge bg-success">Imported</span>
-                                {% elif invoice.processing_status == 'FAILED' %}
-                                <span class="badge bg-danger">Failed</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ invoice.total_items_found }}</td>
-                            <td>{{ invoice.total_items_matched }}</td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="{% url 'invoice_detail' invoice.id %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                    {% if invoice.processing_status == 'PENDING' %}
-                                    <a href="{% url 'invoice_process' invoice.id %}" class="btn btn-sm btn-outline-info">
-                                        <i class="fas fa-cogs"></i> Process
-                                    </a>
-                                    {% elif invoice.processing_status == 'PROCESSED' %}
-                                    <a href="{% url 'invoice_import' invoice.id %}" class="btn btn-sm btn-outline-success">
-                                        <i class="fas fa-file-import"></i> Import
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <table class="responsive-table highlight">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Supplier</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Items Found</th>
+                        <th>Items Matched</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in invoices %}
+                    <tr>
+                        <td>{{ invoice.invoice_number|default:"N/A" }}</td>
+                        <td>{{ invoice.supplier.name }}</td>
+                        <td>{{ invoice.invoice_date|default:invoice.upload_date|date:"M d, Y" }}</td>
+                        <td>
+                            {% if invoice.processing_status == 'PENDING' %}
+                            <span class="new badge orange" data-badge-caption="Pending"></span>
+                            {% elif invoice.processing_status == 'PROCESSED' %}
+                            <span class="new badge blue" data-badge-caption="Processed"></span>
+                            {% elif invoice.processing_status == 'COMPLETED' %}
+                            <span class="new badge green" data-badge-caption="Imported"></span>
+                            {% elif invoice.processing_status == 'FAILED' %}
+                            <span class="new badge red" data-badge-caption="Failed"></span>
+                            {% endif %}
+                        </td>
+                        <td>{{ invoice.total_items_found }}</td>
+                        <td>{{ invoice.total_items_matched }}</td>
+                        <td>
+                            <a href="{% url 'invoice_detail' invoice.id %}" class="btn-small waves-effect waves-light green">
+                                <i class="material-icons">visibility</i>
+                            </a>
+                            {% if invoice.processing_status == 'PENDING' %}
+                            <a href="{% url 'invoice_process' invoice.id %}" class="btn-small waves-effect waves-light blue">
+                                <i class="material-icons">settings</i>
+                            </a>
+                            {% elif invoice.processing_status == 'PROCESSED' %}
+                            <a href="{% url 'invoice_import' invoice.id %}" class="btn-small waves-effect waves-light teal">
+                                <i class="material-icons">save</i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No invoices have been uploaded yet.
+            <div class="card-panel blue-grey lighten-4">
+                <i class="material-icons left">info</i>
+                No invoices have been uploaded yet.
             </div>
             {% endif %}
         </div>

@@ -3,75 +3,89 @@
 {% block title %}Upload Invoice | Pharmacy Management System{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary"><i class="fas fa-file-upload"></i> Upload Invoice</h2>
-        <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Invoices
-        </a>
-    </div>
-
-    {% include 'partials/messages.html' %}
-
+<div class="container">
     <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card shadow">
-                <div class="card-body">
+        <div class="col s12 m10 offset-m1">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">
+                        <i class="material-icons left">file_upload</i> Upload Invoice
+                    </span>
+                    <a href="{% url 'invoice_list' %}" class="btn-floating waves-effect waves-light green right">
+                        <i class="material-icons">arrow_back</i>
+                    </a>
+                </div>
+                <div class="card-content">
+                    {% include 'partials/messages.html' %}
+                    
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         
-                        <div class="mb-3">
-                            <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier*</label>
-                            {{ form.supplier }}
-                            {% if form.supplier.errors %}
-                            <div class="text-danger small">{{ form.supplier.errors }}</div>
-                            {% endif %}
-                            <div class="form-text">Select the supplier who sent this invoice</div>
+                        <div class="row">
+                            <div class="input-field col s12">
+                                <label for="{{ form.supplier.id_for_label }}">Supplier*</label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                <span class="red-text">{{ form.supplier.errors }}</span>
+                                {% endif %}
+                                <span class="helper-text">Select the supplier who sent this invoice</span>
+                            </div>
                         </div>
                         
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.invoice_number.id_for_label }}" class="form-label">Invoice Number</label>
+                        <div class="row">
+                            <div class="input-field col s12 m6">
+                                <label for="{{ form.invoice_number.id_for_label }}">Invoice Number</label>
                                 {{ form.invoice_number }}
                                 {% if form.invoice_number.errors %}
-                                <div class="text-danger small">{{ form.invoice_number.errors }}</div>
+                                <span class="red-text">{{ form.invoice_number.errors }}</span>
                                 {% endif %}
-                                <div class="form-text">Optional - will be extracted if possible</div>
+                                <span class="helper-text">Optional - will be extracted if possible</span>
                             </div>
-                            <div class="col-md-6">
-                                <label for="{{ form.invoice_date.id_for_label }}" class="form-label">Invoice Date</label>
+                            <div class="input-field col s12 m6">
+                                <label for="{{ form.invoice_date.id_for_label }}">Invoice Date</label>
                                 {{ form.invoice_date }}
                                 {% if form.invoice_date.errors %}
-                                <div class="text-danger small">{{ form.invoice_date.errors }}</div>
+                                <span class="red-text">{{ form.invoice_date.errors }}</span>
                                 {% endif %}
-                                <div class="form-text">Optional - will be extracted if possible</div>
+                                <span class="helper-text">Optional - will be extracted if possible</span>
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.file.id_for_label }}" class="form-label">Invoice File*</label>
-                            {{ form.file }}
-                            {% if form.file.errors %}
-                            <div class="text-danger small">{{ form.file.errors }}</div>
-                            {% endif %}
-                            <div class="form-text">
-                                Upload an invoice file (PDF, image, or Excel). The system will attempt to extract and match items.
+                        <div class="row">
+                            <div class="file-field input-field col s12">
+                                <div class="btn green">
+                                    <span>File</span>
+                                    <input type="file" name="file">
+                                </div>
+                                <div class="file-path-wrapper">
+                                    <input class="file-path validate" type="text" placeholder="Upload an invoice file">
+                                </div>
+                                {% if form.file.errors %}
+                                <span class="red-text">{{ form.file.errors }}</span>
+                                {% endif %}
+                                <span class="helper-text">Upload an invoice file (PDF, image, or Excel)</span>
                             </div>
                         </div>
                         
-                        <div class="alert alert-info">
-                            <h5><i class="fas fa-info-circle"></i> Supported File Types:</h5>
-                            <ul>
-                                <li><strong>PDF Documents:</strong> Scanned invoices will be processed using OCR</li>
-                                <li><strong>Images (.jpg, .jpeg, .png):</strong> Will be processed using OCR</li>
-                                <li><strong>Excel Files (.xlsx, .xls):</strong> Will be parsed directly</li>
-                            </ul>
+                        <div class="card blue-grey lighten-5">
+                            <div class="card-content">
+                                <span class="card-title">
+                                    <i class="material-icons left">info</i> Supported File Types:
+                                </span>
+                                <ul class="browser-default">
+                                    <li><strong>PDF Documents:</strong> Scanned invoices will be processed using OCR</li>
+                                    <li><strong>Images (.jpg, .jpeg, .png):</strong> Will be processed using OCR</li>
+                                    <li><strong>Excel Files (.xlsx, .xls):</strong> Will be parsed directly</li>
+                                </ul>
+                            </div>
                         </div>
                         
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-upload"></i> Upload Invoice
-                            </button>
+                        <div class="row">
+                            <div class="col s12 right-align">
+                                <button type="submit" class="btn green waves-effect waves-light">
+                                    <i class="material-icons left">file_upload</i> Upload Invoice
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>

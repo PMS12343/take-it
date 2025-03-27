@@ -5,87 +5,99 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary">
-            <i class="fas fa-truck"></i>
-            {% if supplier %}Edit Supplier: {{ supplier.name }}{% else %}Add New Supplier{% endif %}
-        </h2>
-        <a href="{% url 'supplier_list' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Suppliers
-        </a>
+<div class="container">
+    <div class="row">
+        <div class="col s12">
+            <h4 class="green-text">
+                <i class="material-icons left">local_shipping</i>
+                {% if supplier %}Edit Supplier: {{ supplier.name }}{% else %}Add New Supplier{% endif %}
+            </h4>
+            <a href="{% url 'supplier_list' %}" class="btn-floating waves-effect waves-light green right">
+                <i class="material-icons">arrow_back</i>
+            </a>
+        </div>
     </div>
 
     {% include 'partials/messages.html' %}
 
-    <div class="card shadow">
-        <div class="card-body">
+    <div class="card">
+        <div class="card-content">
             <form method="post">
                 {% csrf_token %}
                 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="{{ form.name.id_for_label }}" class="form-label">Name*</label>
+                <div class="row">
+                    <div class="input-field col s12 m6">
+                        <label for="{{ form.name.id_for_label }}">Name*</label>
                         {{ form.name }}
                         {% if form.name.errors %}
-                        <div class="text-danger small">{{ form.name.errors }}</div>
+                        <span class="red-text">{{ form.name.errors }}</span>
                         {% endif %}
                     </div>
-                    <div class="col-md-6">
-                        <label for="{{ form.contact_person.id_for_label }}" class="form-label">Contact Person</label>
+                    <div class="input-field col s12 m6">
+                        <label for="{{ form.contact_person.id_for_label }}">Contact Person</label>
                         {{ form.contact_person }}
                         {% if form.contact_person.errors %}
-                        <div class="text-danger small">{{ form.contact_person.errors }}</div>
+                        <span class="red-text">{{ form.contact_person.errors }}</span>
                         {% endif %}
                     </div>
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                <div class="row">
+                    <div class="input-field col s12 m6">
+                        <label for="{{ form.email.id_for_label }}">Email</label>
                         {{ form.email }}
                         {% if form.email.errors %}
-                        <div class="text-danger small">{{ form.email.errors }}</div>
+                        <span class="red-text">{{ form.email.errors }}</span>
                         {% endif %}
                     </div>
-                    <div class="col-md-6">
-                        <label for="{{ form.phone.id_for_label }}" class="form-label">Phone</label>
+                    <div class="input-field col s12 m6">
+                        <label for="{{ form.phone.id_for_label }}">Phone</label>
                         {{ form.phone }}
                         {% if form.phone.errors %}
-                        <div class="text-danger small">{{ form.phone.errors }}</div>
+                        <span class="red-text">{{ form.phone.errors }}</span>
                         {% endif %}
                     </div>
                 </div>
                 
-                <div class="mb-3">
-                    <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
-                    {{ form.address }}
-                    {% if form.address.errors %}
-                    <div class="text-danger small">{{ form.address.errors }}</div>
-                    {% endif %}
+                <div class="row">
+                    <div class="input-field col s12">
+                        <label for="{{ form.address.id_for_label }}">Address</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                        <span class="red-text">{{ form.address.errors }}</span>
+                        {% endif %}
+                    </div>
                 </div>
                 
-                <div class="mb-3">
-                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
-                    {{ form.notes }}
-                    {% if form.notes.errors %}
-                    <div class="text-danger small">{{ form.notes.errors }}</div>
-                    {% endif %}
+                <div class="row">
+                    <div class="input-field col s12">
+                        <label for="{{ form.notes.id_for_label }}">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                        <span class="red-text">{{ form.notes.errors }}</span>
+                        {% endif %}
+                    </div>
                 </div>
                 
-                <div class="mb-3 form-check">
-                    {{ form.is_active }}
-                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active</label>
-                    {% if form.is_active.errors %}
-                    <div class="text-danger small">{{ form.is_active.errors }}</div>
-                    {% endif %}
+                <div class="row">
+                    <div class="col s12">
+                        <label>
+                            {{ form.is_active }}
+                            <span>Active</span>
+                        </label>
+                        {% if form.is_active.errors %}
+                        <span class="red-text">{{ form.is_active.errors }}</span>
+                        {% endif %}
+                    </div>
                 </div>
                 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> 
-                        {% if supplier %}Update Supplier{% else %}Add Supplier{% endif %}
-                    </button>
+                <div class="row">
+                    <div class="col s12 right-align">
+                        <button type="submit" class="btn green waves-effect waves-light">
+                            <i class="material-icons left">save</i>
+                            {% if supplier %}Update Supplier{% else %}Add Supplier{% endif %}
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
