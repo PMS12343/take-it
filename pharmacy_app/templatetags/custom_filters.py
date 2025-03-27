@@ -11,3 +11,13 @@ def multiply(value, arg):
         return result
     except (ValueError, TypeError):
         return 0
+
+
+from django import template
+
+register = template.Library()
+
+@register.filter
+def sum(values):
+    return sum(values)
+    
