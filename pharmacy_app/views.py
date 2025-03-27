@@ -1544,7 +1544,7 @@ def supplier_add(request):
     else:
         form = SupplierForm()
     
-    return render(request, 'suppliers/add.html', {'form': form})
+    return render(request, 'suppliers/form.html', {'form': form})
 
 @login_required
 @requires_role(['Admin', 'Pharmacist'])
@@ -1561,7 +1561,7 @@ def supplier_edit(request, supplier_id):
     else:
         form = SupplierForm(instance=supplier)
     
-    return render(request, 'suppliers/edit.html', {'form': form, 'supplier': supplier})
+    return render(request, 'suppliers/form.html', {'form': form, 'supplier': supplier})
 
 # Invoice Parsing Views
 @login_required
