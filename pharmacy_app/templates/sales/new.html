@@ -55,6 +55,17 @@
                     </div>
                     
                     <div class="row">
+                        <div class="input-field col s12 m6">
+                            <i class="material-icons prefix">attach_money</i>
+                            {{ form.tax }}
+                            <label for="{{ form.tax.id_for_label }}">Tax Amount ($)</label>
+                            {% if form.tax.errors %}
+                                <span class="red-text">{{ form.tax.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
                         <div class="input-field col s12">
                             <i class="material-icons prefix">note</i>
                             {{ form.notes }}
@@ -162,7 +173,7 @@
                                                 <td>$<span id="summary-subtotal">0.00</span></td>
                                             </tr>
                                             <tr>
-                                                <th>Tax (10%):</th>
+                                                <th>Tax:</th>
                                                 <td>$<span id="summary-tax">0.00</span></td>
                                             </tr>
                                             <tr>

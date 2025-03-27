@@ -15,7 +15,9 @@ function initializeSalesForm() {
     // Set up form handlers
     setupFormsetManagement();
     setupItemPriceCalculation();
-    setupTotalCalculation();
+    
+    // Update the initial total calculation
+    updateTotalCalculation();
     
     // Initialize select fields
     initializeSelectFields();
@@ -245,12 +247,35 @@ function updateTotalCalculation() {
         subtotal += quantity * price;
     });
     
-    // Calculate tax (10%)
-    const tax = subtotal * 0.1;
+    // Get tax from user input field
+    const taxInput = document.getElementById('id_tax');
+    let tax = 0;
+    
+    if (taxInput) {
+        tax = parseFloat(taxInput.value) || 0;
+    } else {
+        // Fall back to 10% if tax field not found
+        tax = subtotal * 0.1;
+    }
     
     // Get discount
     const discountInput = document.getElementById('id_discount');
     const discount = discountInput ? parseFloat(discountInput.value) || 0 : 0;
+    
+    // Add event listeners for tax and discount inputs if they haven't been added yet
+    if (taxInput && !taxInput.hasAttribute('data-has-listener')) {
+        taxInput.addEventListener('input', function() {
+            updateTotalCalculation();
+        });
+        taxInput.setAttribute('data-has-listener', 'true');
+    }
+    
+    if (discountInput && !discountInput.hasAttribute('data-has-listener')) {
+        discountInput.addEventListener('input', function() {
+            updateTotalCalculation();
+        });
+        discountInput.setAttribute('data-has-listener', 'true');
+    }
     
     // Calculate total
     const total = subtotal + tax - discount;

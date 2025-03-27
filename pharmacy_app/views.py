@@ -371,10 +371,10 @@ def new_sale(request):
                             subtotal += item.price * item.quantity
                         
                         # Apply tax and discount calculations
-                        tax_amount = subtotal * decimal.Decimal('0.10')  # 10% tax example
+                        # Use the tax value from the form instead of calculating it
                         sale.subtotal = subtotal
-                        sale.tax = tax_amount
-                        sale.total_amount = subtotal + tax_amount - sale.discount
+                        # Tax value was already set from the form's cleaned_data
+                        sale.total_amount = subtotal + sale.tax - sale.discount
                         sale.save()
                         
                         # Check for drug interactions

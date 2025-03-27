@@ -136,6 +136,12 @@ class SaleForm(forms.ModelForm):
             'discount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super(SaleForm, self).__init__(*args, **kwargs)
+        # Initialize tax with zero if it's a new form
+        if not self.instance.pk and not self.initial.get('tax'):
+            self.initial['tax'] = 0.00
 
 class SaleItemForm(forms.ModelForm):
     """Form for individual sale items"""
