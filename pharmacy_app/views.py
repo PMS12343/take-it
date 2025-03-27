@@ -983,7 +983,17 @@ def get_drug_by_barcode(request):
     try:
         # Make sure barcode is not empty when searching
         if barcode.strip():
-            drug = Drug.objects.get(barcode=barcode, is_active=True)
+            try:
+                # First try to find a drug with exact barcode match
+                drug = Drug.objects.get(barcode=barcode, is_active=True)
+            except Drug.DoesNotExist:
+                # If not found, try to find a drug with barcode containing the search term
+                # This is more forgiving for partial barcode scans
+                drugs = Drug.objects.filter(barcode__icontains=barcode, is_active=True)
+                if drugs.exists():
+                    drug = drugs.first()
+                else:
+                    return JsonResponse({'error': 'No drug found with this barcode', 'success': False}, status=404)
             
             data = {
                 'id': drug.id,
@@ -995,6 +1005,9 @@ def get_drug_by_barcode(request):
                 'is_expired': drug.is_expired(),
                 'success': True
             }
+            
+            # Log successful scan for debugging
+            print(f"Successfully found drug by barcode: {barcode} -> {drug.name}")
             
             return JsonResponse(data)
         else:

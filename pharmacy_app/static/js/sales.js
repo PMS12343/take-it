@@ -289,6 +289,7 @@ function setupFormValidation() {
     if (!saleForm) return;
     
     saleForm.addEventListener('submit', function(event) {
+        console.log('Form submission validation');
         let isValid = true;
         let hasItems = false;
         
@@ -304,10 +305,11 @@ function setupFormValidation() {
             if (drugSelect && drugSelect.value && quantityInput && parseInt(quantityInput.value) > 0) {
                 hasItems = true;
                 
-                // Check stock availability
+                // Check stock availability only if we have stock data
                 if (row.dataset.stock && parseInt(quantityInput.value) > parseInt(row.dataset.stock)) {
                     isValid = false;
                     quantityInput.classList.add('invalid');
+                    M.toast({html: `Not enough stock for selected drug. Available: ${row.dataset.stock}`, classes: 'red'});
                 }
             }
         });
@@ -317,9 +319,19 @@ function setupFormValidation() {
             isValid = false;
         }
         
+        // Check if patient is selected
+        const patientSelect = document.getElementById('id_patient');
+        if (patientSelect && !patientSelect.value) {
+            M.toast({html: 'Please select a patient', classes: 'red'});
+            isValid = false;
+        }
+        
         if (!isValid) {
+            console.log('Form validation failed');
             event.preventDefault();
             M.toast({html: 'Please correct the errors before submitting', classes: 'red'});
+        } else {
+            console.log('Form validation successful');
         }
     });
 }
@@ -331,8 +343,11 @@ function setupBarcodeScanner() {
     const barcodeInput = document.getElementById('barcode_scanner');
     if (!barcodeInput) return;
     
-    // Focus on the barcode input when the page loads
-    setTimeout(() => barcodeInput.focus(), 500);
+    // Add helper text to indicate barcode is optional
+    const helperText = document.createElement('span');
+    helperText.className = 'helper-text';
+    helperText.textContent = '(Optional) You can also add items manually using the dropdown below';
+    barcodeInput.parentNode.appendChild(helperText);
     
     // Handle barcode input
     barcodeInput.addEventListener('keydown', function(e) {
@@ -348,10 +363,17 @@ function setupBarcodeScanner() {
         }
     });
     
-    // Re-focus on barcode scanner after any click on the page
-    document.addEventListener('click', function() {
-        setTimeout(() => barcodeInput.focus(), 100);
-    });
+    // Add a dedicated scanner button
+    const scannerIcon = barcodeInput.previousElementSibling;
+    if (scannerIcon) {
+        scannerIcon.style.cursor = 'pointer';
+        scannerIcon.addEventListener('click', function() {
+            barcodeInput.focus();
+        });
+    }
+    
+    // Remove auto-focus behavior to make it clear barcode is optional
+    // The user can click on the scanner icon or field when they want to use it
 }
 
 /**
