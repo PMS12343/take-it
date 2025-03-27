@@ -358,19 +358,36 @@ function setupBarcodeScanner() {
  * Fetch drug information by barcode
  */
 function fetchDrugByBarcode(barcode) {
-    fetch(`/api/drugs/barcode/?barcode=${encodeURIComponent(barcode)}`)
+    console.log('Fetching drug by barcode:', barcode);
+    
+    // Show a toast to indicate the scanning is in progress
+    M.toast({html: `Scanning barcode: ${barcode}...`, classes: 'blue'});
+    
+    fetch(`/api/drugs/barcode/?barcode=${encodeURIComponent(barcode)}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
         .then(response => {
+            console.log('Response status:', response.status);
             if (!response.ok) {
                 if (response.status === 404) {
                     throw new Error('No drug found with this barcode');
+                } else if (response.status === 302) {
+                    throw new Error('Redirected. You may need to log in again.');
                 }
-                throw new Error('Network response was not ok');
+                throw new Error(`Network response was not ok: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
+            console.log('Barcode API response:', data);
             if (data.success) {
                 addDrugToForm(data);
+                M.toast({html: `Found drug: ${data.name}`, classes: 'green'});
             } else {
                 M.toast({html: data.error || 'Error processing barcode', classes: 'red'});
             }
@@ -385,6 +402,14 @@ function fetchDrugByBarcode(barcode) {
  * Add a drug to the form using data from the barcode scan
  */
 function addDrugToForm(drugData) {
+    console.log('Adding drug to form:', drugData);
+    
+    if (!drugData || !drugData.id) {
+        console.error('Invalid drug data:', drugData);
+        M.toast({html: 'Error: Invalid drug data', classes: 'red'});
+        return;
+    }
+    
     // Check if drug is already in the form
     let existingRow = null;
     let existingIndex = -1;
@@ -402,46 +427,95 @@ function addDrugToForm(drugData) {
     });
     
     if (existingRow) {
+        console.log('Updating existing item at index:', existingIndex);
         // Update quantity of existing item
         const quantityInput = document.getElementById(`id_saleitems-${existingIndex}-quantity`);
         if (quantityInput) {
             const currentQty = parseInt(quantityInput.value) || 0;
-            quantityInput.value = currentQty + 1;
+            const newQty = currentQty + 1;
+            quantityInput.value = newQty;
             
             // Trigger the input event to update calculations
             const event = new Event('input', { bubbles: true });
             quantityInput.dispatchEvent(event);
             
-            M.toast({html: `Added ${drugData.name} (now ${currentQty + 1})`, classes: 'green'});
+            // Update the item's data attributes
+            const row = quantityInput.closest('.sale-item-row');
+            if (row) {
+                row.dataset.price = drugData.price;
+                row.dataset.stock = drugData.available_stock;
+            }
+            
+            M.toast({html: `Added ${drugData.name} (now ${newQty})`, classes: 'green'});
         }
     } else {
+        console.log('Adding new item');
         // Add new item
         const addButton = document.getElementById('add-more');
         if (addButton) {
-            // First click the add button to create a new row
-            addButton.click();
-            
-            // Get the index of the new row
-            const totalForms = document.getElementById('id_saleitems-TOTAL_FORMS');
-            const newIndex = parseInt(totalForms.value) - 1;
-            
-            // Set the drug and quantity
-            const drugSelect = document.getElementById(`id_saleitems-${newIndex}-drug`);
-            const quantityInput = document.getElementById(`id_saleitems-${newIndex}-quantity`);
-            
-            if (drugSelect && quantityInput) {
+            try {
+                // First click the add button to create a new row
+                addButton.click();
+                
+                // Get the index of the new row
+                const totalForms = document.getElementById('id_saleitems-TOTAL_FORMS');
+                if (!totalForms) {
+                    throw new Error('Could not find TOTAL_FORMS element');
+                }
+                
+                const newIndex = parseInt(totalForms.value) - 1;
+                console.log('New item index:', newIndex);
+                
+                // Set the drug and quantity
+                const drugSelect = document.getElementById(`id_saleitems-${newIndex}-drug`);
+                const quantityInput = document.getElementById(`id_saleitems-${newIndex}-quantity`);
+                
+                if (!drugSelect) {
+                    throw new Error(`Could not find drug select field for index ${newIndex}`);
+                }
+                
+                if (!quantityInput) {
+                    throw new Error(`Could not find quantity input field for index ${newIndex}`);
+                }
+                
+                // Set values
                 drugSelect.value = drugData.id;
                 quantityInput.value = 1;
                 
                 // Update the select with Materialize
                 M.FormSelect.init(drugSelect);
                 
+                // Store data in the row for calculations
+                const row = drugSelect.closest('.sale-item-row');
+                if (row) {
+                    row.dataset.price = drugData.price;
+                    row.dataset.stock = drugData.available_stock;
+                }
+                
+                // Update the item info display
+                const itemInfo = row.querySelector('.item-info');
+                if (itemInfo) {
+                    itemInfo.querySelector('.stock-qty').textContent = drugData.available_stock;
+                    itemInfo.querySelector('.unit-price').textContent = drugData.price.toFixed(2);
+                    itemInfo.querySelector('.subtotal').textContent = drugData.price.toFixed(2);
+                    itemInfo.style.display = 'block';
+                }
+                
                 // Trigger the change event to fetch drug info
                 const changeEvent = new Event('change', { bubbles: true });
                 drugSelect.dispatchEvent(changeEvent);
                 
+                // Update total calculation
+                updateTotalCalculation();
+                
                 M.toast({html: `Added ${drugData.name}`, classes: 'green'});
+            } catch (error) {
+                console.error('Error adding drug to form:', error);
+                M.toast({html: `Error adding drug: ${error.message}`, classes: 'red'});
             }
+        } else {
+            console.error('Could not find add button');
+            M.toast({html: 'Error: Could not find add button', classes: 'red'});
         }
     }
 }

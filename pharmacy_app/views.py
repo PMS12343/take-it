@@ -978,22 +978,30 @@ def get_drug_by_barcode(request):
     barcode = request.GET.get('barcode', '')
     
     if not barcode:
-        return JsonResponse({'error': 'No barcode provided'}, status=400)
+        return JsonResponse({'error': 'No barcode provided', 'success': False}, status=400)
     
     try:
-        drug = Drug.objects.get(barcode=barcode, is_active=True)
-        
-        data = {
-            'id': drug.id,
-            'name': drug.name,
-            'brand': drug.brand,
-            'price': float(drug.selling_price),
-            'available_stock': drug.stock_quantity,
-            'expiry_date': drug.expiry_date.strftime('%Y-%m-%d'),
-            'is_expired': drug.is_expired(),
-            'success': True
-        }
-        
-        return JsonResponse(data)
+        # Make sure barcode is not empty when searching
+        if barcode.strip():
+            drug = Drug.objects.get(barcode=barcode, is_active=True)
+            
+            data = {
+                'id': drug.id,
+                'name': drug.name,
+                'brand': drug.brand,
+                'price': float(drug.selling_price),
+                'available_stock': drug.stock_quantity,
+                'expiry_date': drug.expiry_date.strftime('%Y-%m-%d'),
+                'is_expired': drug.is_expired(),
+                'success': True
+            }
+            
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'error': 'Empty barcode provided', 'success': False}, status=400)
     except Drug.DoesNotExist:
         return JsonResponse({'error': 'No drug found with this barcode', 'success': False}, status=404)
+    except Exception as e:
+        # Log the error
+        print(f"Error in get_drug_by_barcode: {str(e)}")
+        return JsonResponse({'error': f'An error occurred: {str(e)}', 'success': False}, status=500)
