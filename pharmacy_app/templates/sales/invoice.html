@@ -9,69 +9,69 @@
             background-color: #fff;
             font-size: 12pt;
         }
-        
+
         .container {
             width: 100%;
             max-width: none;
             padding: 0;
             margin: 0;
         }
-        
+
         .page-title, .print-btn, .green {
             display: none !important;
         }
-        
+
         .card {
             box-shadow: none;
             border: none;
             margin: 0;
             padding: 0;
         }
-        
+
         .card-content {
             padding: 0;
         }
-        
+
         .card-action {
             display: none;
         }
-        
+
         header, footer, nav, aside {
             display: none;
         }
     }
-    
+
     .invoice-header {
         padding-bottom: 20px;
         border-bottom: 1px solid #ddd;
     }
-    
+
     .invoice-company {
         margin-bottom: 20px;
     }
-    
+
     .invoice-title {
         font-size: 24px;
         font-weight: 300;
         margin-bottom: 15px;
     }
-    
+
     .invoice-details {
         margin-top: 20px;
     }
-    
+
     .invoice-table {
         margin-top: 40px;
     }
-    
+
     .invoice-total {
         margin-top: 20px;
     }
-    
+
     .signature-area {
         margin-top: 50px;
     }
-    
+
     .invoice-footer {
         margin-top: 40px;
         padding-top: 20px;
@@ -94,7 +94,7 @@
                 <i class="material-icons left">file_download</i> Download PDF
             </a>
         </h4>
-        
+
         <div class="card">
             <div class="card-content">
                 <!-- Invoice Header -->
@@ -106,7 +106,7 @@
                             <p>Phone: {{ company_phone }}</p>
                             <p>Email: {{ company_email }}</p>
                         </div>
-                        
+
                         <div class="col s12 m6 right-align">
                             <h4 class="invoice-title">INVOICE</h4>
                             <p><strong>Invoice #:</strong> {{ sale.invoice_number }}</p>
@@ -115,7 +115,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Invoice Details -->
                 <div class="invoice-details">
                     <div class="row">
@@ -132,7 +132,7 @@
                                 <p>Walk-in Customer</p>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col s12 m6 right-align">
                             <h5>Payment Information:</h5>
                             <p><strong>Method:</strong> {{ sale.payment_method }}</p>
@@ -141,7 +141,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Invoice Items -->
                 <div class="invoice-table">
                     <table class="striped">
@@ -160,14 +160,14 @@
                                 <td>{{ forloop.counter }}</td>
                                 <td>{{ item.drug_name }}</td>
                                 <td class="center-align">{{ item.quantity }}</td>
-                                <td class="right-align">{{ item.price|floatformat:2 }} IQD</td>
-                                <td class="right-align">{{ item.total_price|floatformat:2 }} IQD</td>
+                                <td class="right-align">{{ item.price|floatformat:0 }} IQD</td>
+                                <td class="right-align">{{ item.total_price|floatformat:0 }} IQD</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Invoice Total -->
                 <div class="invoice-total">
                     <div class="row">
@@ -176,26 +176,26 @@
                                 <tbody>
                                     <tr>
                                         <th>Subtotal:</th>
-                                        <td class="right-align">{{ sale.subtotal|floatformat:2 }} IQD</td>
+                                        <td class="right-align">{{ sale.subtotal|floatformat:0 }} IQD</td>
                                     </tr>
                                     <tr>
                                         <th>Tax:</th>
-                                        <td class="right-align">{{ sale.tax|floatformat:2 }} IQD</td>
+                                        <td class="right-align">{{ sale.tax|floatformat:0 }} IQD</td>
                                     </tr>
                                     <tr>
                                         <th>Discount:</th>
-                                        <td class="right-align">{{ sale.discount|floatformat:2 }} IQD</td>
+                                        <td class="right-align">{{ sale.discount|floatformat:0 }} IQD</td>
                                     </tr>
                                     <tr>
                                         <th><strong>TOTAL:</strong></th>
-                                        <td class="right-align"><strong>{{ sale.total_amount|floatformat:2 }} IQD</strong></td>
+                                        <td class="right-align"><strong>{{ sale.total_amount|floatformat:0 }} IQD</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Notes -->
                 {% if sale.notes %}
                 <div class="row" style="margin-top: 30px;">
@@ -205,27 +205,27 @@
                     </div>
                 </div>
                 {% endif %}
-                
+
                 <!-- Signature Area -->
                 <div class="signature-area">
                     <div class="row">
                         <div class="col s6">
                             <p style="border-top: 1px solid #ddd; padding-top: 10px;">Pharmacist Signature</p>
                         </div>
-                        
+
                         <div class="col s6">
                             <p style="border-top: 1px solid #ddd; padding-top: 10px;">Patient/Customer Signature</p>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Invoice Footer -->
                 <div class="invoice-footer">
                     <p>Thank you for your business!</p>
                     <p>{{ company_name }} - {{ company_address }} - {{ company_phone }}</p>
                 </div>
             </div>
-            
+
             <div class="card-action no-print">
                 <a href="{% url 'sale_detail' sale.id %}">Back to Sale Details</a>
                 <button class="btn green right" onclick="window.print()">

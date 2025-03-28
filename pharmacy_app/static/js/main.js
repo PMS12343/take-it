@@ -178,7 +178,7 @@ function setActiveNavLink() {
  * @returns {string} - Formatted currency string
  */
 function formatCurrency(value) {
-    return parseFloat(value).toFixed(2) + ' IQD';
+    return parseFloat(value).toFixed(0) + ' IQD';
 }
 
 /**

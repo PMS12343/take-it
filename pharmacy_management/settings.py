@@ -137,7 +137,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Currency settings
 CURRENCY_SYMBOL = 'IQD'
 CURRENCY_CODE = 'IQD'
-CURRENCY_DECIMAL_PLACES = 0  # IQD typically doesn't use decimal places
+CURRENCY_DECIMAL_PLACES = 0  # Iraqi Dinar doesn't use decimal places
 
 # Authentication settings
 LOGIN_URL = '/login/'
