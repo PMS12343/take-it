@@ -137,7 +137,7 @@
                             <td>{{ sale.date|date:"M d, Y H:i" }}</td>
                             <td>{{ sale.invoice_number }}</td>
                             <td>{{ sale.item_count }}</td>
-                            <td>${{ sale.total_amount|floatformat:2 }}</td>
+                            <td>{{ sale.total_amount|floatformat:2 }} IQD</td>
                             <td>
                                 <a href="{% url 'sale_detail' sale.id %}" class="btn-floating btn-small waves-effect waves-light tooltipped" data-position="top" data-tooltip="View Details">
                                     <i class="material-icons">visibility</i>

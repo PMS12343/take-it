@@ -126,27 +126,27 @@
                             <td>{{ forloop.counter }}</td>
                             <td>{{ item.drug_name }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>${{ item.price|floatformat:2 }}</td>
-                            <td>${{ item.total_price|floatformat:2 }}</td>
+                            <td>{{ item.price|floatformat:2 }} IQD</td>
+                            <td>{{ item.total_price|floatformat:2 }} IQD</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="4" class="right-align">Subtotal:</th>
-                            <td>${{ sale.subtotal|floatformat:2 }}</td>
+                            <td>{{ sale.subtotal|floatformat:2 }} IQD</td>
                         </tr>
                         <tr>
                             <th colspan="4" class="right-align">Tax:</th>
-                            <td>${{ sale.tax|floatformat:2 }}</td>
+                            <td>{{ sale.tax|floatformat:2 }} IQD</td>
                         </tr>
                         <tr>
                             <th colspan="4" class="right-align">Discount:</th>
-                            <td>${{ sale.discount|floatformat:2 }}</td>
+                            <td>{{ sale.discount|floatformat:2 }} IQD</td>
                         </tr>
                         <tr>
                             <th colspan="4" class="right-align">Total:</th>
-                            <td><strong>${{ sale.total_amount|floatformat:2 }}</strong></td>
+                            <td><strong>{{ sale.total_amount|floatformat:2 }} IQD</strong></td>
                         </tr>
                     </tfoot>
                 </table>
