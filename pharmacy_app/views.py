@@ -553,7 +553,8 @@ def profile_view(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Profile updated successfully.")
-            return redirect('profile')
+            # Instead of redirecting, render the template directly to maintain the dark mode state
+            return render(request, 'profile.html', {'form': form})
     else:
         form = UserProfileForm(instance=request.user.profile)
     
