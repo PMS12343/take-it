@@ -2,6 +2,25 @@
 
 {% block title %}New Sale - Pharmacy Management System{% endblock %}
 
+{% block extra_head %}
+<style>
+    .disabled-field {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+    .disabled-text {
+        color: #999 !important;
+    }
+    .walkIn-active {
+        padding: 5px 10px;
+        background-color: #e8f5e9;
+        border-radius: 4px;
+        margin-top: 10px;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col s12">
@@ -22,6 +41,13 @@
                             {% if form.patient.errors %}
                                 <span class="red-text">{{ form.patient.errors.0 }}</span>
                             {% endif %}
+                            
+                            <div style="margin-top: 15px;">
+                                <label>
+                                    {{ form.use_walk_in }}
+                                    <span>{{ form.use_walk_in.label }}</span>
+                                </label>
+                            </div>
                         </div>
                         
                         <div class="input-field col s12 m6">
@@ -281,6 +307,106 @@
 <script src="/static/js/sales.js"></script>
 <!-- QuaggaJS for barcode scanning -->
 <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.2/dist/quagga.min.js"></script>
+<script>
+    // Handle walk-in customer checkbox
+    document.addEventListener('DOMContentLoaded', function() {
+        const walkInCheckbox = document.getElementById('id_use_walk_in');
+        const patientSelect = document.getElementById('id_patient');
+        const patientField = patientSelect.closest('.input-field');
+        
+        // Store the walk-in customer ID for easy access
+        const walkInCustomerId = "{{ walk_in_customer_id }}";
+        
+        // Initial setup based on checkbox state
+        function updatePatientFieldState() {
+            if (walkInCheckbox.checked) {
+                // Disable patient selection when walk-in is checked
+                patientSelect.disabled = true;
+                // Add visual indication that the field is disabled
+                patientField.classList.add('disabled-field');
+                patientField.querySelector('label').classList.add('disabled-text');
+                
+                // Add visual indicator that walk-in mode is active
+                const walkInIndicator = document.createElement('div');
+                walkInIndicator.className = 'walkIn-active';
+                walkInIndicator.innerHTML = '<i class="material-icons tiny">person</i> Walk-In Customer Mode Active';
+                
+                if (!document.querySelector('.walkIn-active')) {
+                    patientField.appendChild(walkInIndicator);
+                }
+                
+                // Clear the old selection and show the text "Walk-In Customer"
+                const walkInOption = document.createElement('option');
+                walkInOption.value = '';
+                walkInOption.text = 'Walk-In Customer';
+                walkInOption.selected = true;
+                
+                // Save original options
+                if (!patientSelect.dataset.optionsStored) {
+                    patientSelect.dataset.optionsStored = 'true';
+                    patientSelect.dataset.originalSelectedValue = patientSelect.value;
+                    const options = Array.from(patientSelect.options).map(opt => ({ 
+                        value: opt.value, 
+                        text: opt.text 
+                    }));
+                    patientSelect.dataset.originalOptions = JSON.stringify(options);
+                }
+                
+                // Clear all options
+                patientSelect.innerHTML = '';
+                patientSelect.appendChild(walkInOption);
+                
+                // Initialize Materialize select
+                M.FormSelect.init(patientSelect);
+                
+            } else {
+                // Enable patient selection when walk-in is unchecked
+                patientSelect.disabled = false;
+                patientField.classList.remove('disabled-field');
+                patientField.querySelector('label').classList.remove('disabled-text');
+                
+                // Remove the walk-in indicator if it exists
+                const indicator = patientField.querySelector('.walkIn-active');
+                if (indicator) {
+                    indicator.remove();
+                }
+                
+                // Restore original options if they were stored
+                if (patientSelect.dataset.optionsStored) {
+                    try {
+                        const originalOptions = JSON.parse(patientSelect.dataset.originalOptions);
+                        const originalSelectedValue = patientSelect.dataset.originalSelectedValue;
+                        
+                        // Restore options
+                        patientSelect.innerHTML = '';
+                        originalOptions.forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt.value;
+                            option.text = opt.text;
+                            if (opt.value === originalSelectedValue) {
+                                option.selected = true;
+                            }
+                            patientSelect.appendChild(option);
+                        });
+                        
+                        // Initialize Materialize select
+                        M.FormSelect.init(patientSelect);
+                    } catch (e) {
+                        console.error('Error restoring patient options:', e);
+                    }
+                }
+            }
+        }
+        
+        // Add event listener for checkbox changes
+        if (walkInCheckbox) {
+            walkInCheckbox.addEventListener('change', updatePatientFieldState);
+            
+            // Handle initial state in case checkbox is pre-checked
+            updatePatientFieldState();
+        }
+    });
+</script>
 <script>
     $(document).ready(function() {
         const scanSalesBarcodeBtn = document.getElementById('scanSalesBarcodeBtn');

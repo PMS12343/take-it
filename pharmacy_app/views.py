@@ -888,6 +888,14 @@ def new_sale(request):
             try:
                 sale = form.save(commit=False)
                 sale.user = request.user
+                
+                # Check if this is a walk-in customer sale
+                use_walk_in = form.cleaned_data.get('use_walk_in', False)
+                if use_walk_in:
+                    # Get or create a default walk-in customer
+                    walk_in_customer = Patient.get_or_create_walk_in()
+                    sale.patient = walk_in_customer
+                
                 sale.save()
                 
                 formset = SaleItemFormSet(request.POST, instance=sale)
@@ -968,11 +976,15 @@ def new_sale(request):
     drugs = Drug.objects.filter(is_active=True, stock_quantity__gt=0)
     patients = Patient.objects.all()
     
+    # Make sure we have a walk-in customer
+    walk_in_customer = Patient.get_or_create_walk_in()
+    
     context = {
         'form': form,
         'formset': formset,
         'drugs': drugs,
         'patients': patients,
+        'walk_in_customer_id': walk_in_customer.id,
     }
     
     return render(request, 'sales/new.html', context)

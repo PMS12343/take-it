@@ -126,6 +126,12 @@ class PatientForm(forms.ModelForm):
 
 class SaleForm(forms.ModelForm):
     """Form for creating sales"""
+    use_walk_in = forms.BooleanField(
+        required=False, 
+        label="Walk-In Customer",
+        widget=forms.CheckboxInput(attrs={'class': 'filled-in'})
+    )
+    
     class Meta:
         model = Sale
         fields = ['patient', 'payment_method', 'payment_status', 'tax', 'discount', 'notes']
@@ -143,6 +149,22 @@ class SaleForm(forms.ModelForm):
         # Initialize tax with zero if it's a new form
         if not self.instance.pk and not self.initial.get('tax'):
             self.initial['tax'] = 0.00
+            
+    def clean(self):
+        cleaned_data = super().clean()
+        use_walk_in = cleaned_data.get('use_walk_in')
+        patient = cleaned_data.get('patient')
+        
+        # If walk-in is selected but no patient is provided, this will be handled in the view
+        # by assigning the walk-in customer automatically
+        if use_walk_in:
+            # Remove any validation errors for patient field if walk-in is selected
+            if 'patient' in self.errors:
+                del self.errors['patient']
+            # Set patient to None so we know to use walk-in in the view
+            cleaned_data['patient'] = None
+            
+        return cleaned_data
 
 class SaleItemForm(forms.ModelForm):
     """Form for individual sale items"""

@@ -101,16 +101,36 @@ class Patient(models.Model):
     allergies = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_walk_in = models.BooleanField(default=False, help_text="Indicates if this is a walk-in customer")
     
     class Meta:
         ordering = ['last_name', 'first_name']
     
     def __str__(self):
+        if self.is_walk_in:
+            return "Walk-In Customer"
         return f"{self.first_name} {self.last_name}"
     
     @property
     def full_name(self):
+        if self.is_walk_in:
+            return "Walk-In Customer"
         return f"{self.first_name} {self.last_name}"
+    
+    @classmethod
+    def get_or_create_walk_in(cls):
+        """Get or create a default walk-in customer for non-registered sales"""
+        walk_in, created = cls.objects.get_or_create(
+            is_walk_in=True,
+            defaults={
+                'first_name': 'Walk-In',
+                'last_name': 'Customer',
+                'age': 0,
+                'sex': 'O',
+                'phone_number': 'N/A',
+            }
+        )
+        return walk_in
 
 class Sale(models.Model):
     """Model for recording sales transactions"""

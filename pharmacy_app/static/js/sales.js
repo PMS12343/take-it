@@ -356,14 +356,20 @@ function setupFormValidation() {
                 isValid = false;
             }
             
-            // Check if patient is selected
+            // Check if patient is selected (unless walk-in is checked)
             const patientSelect = document.getElementById('id_patient');
-            if (patientSelect && !patientSelect.value) {
+            const walkInCheckbox = document.getElementById('id_use_walk_in');
+            
+            if (patientSelect && !patientSelect.value && !(walkInCheckbox && walkInCheckbox.checked)) {
                 debugInfo += 'No patient selected. ';
-                M.toast({html: 'Please select a patient', classes: 'red'});
+                M.toast({html: 'Please select a patient or check Walk-In Customer', classes: 'red'});
                 isValid = false;
             } else {
-                debugInfo += `Patient selected: ${patientSelect ? patientSelect.value : 'missing field'}. `;
+                if (walkInCheckbox && walkInCheckbox.checked) {
+                    debugInfo += 'Walk-in customer selected. ';
+                } else {
+                    debugInfo += `Patient selected: ${patientSelect ? patientSelect.value : 'missing field'}. `;
+                }
             }
             
             if (!isValid) {
