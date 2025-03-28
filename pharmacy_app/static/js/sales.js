@@ -133,6 +133,9 @@ function setupItemListeners(index) {
         if (drugSelect.value) {
             validateQuantityAgainstStock(index);
         }
+        
+        // Make sure the label is properly positioned
+        M.updateTextFields();
     });
     
     // Convert drug select to autocomplete
@@ -312,6 +315,9 @@ function validateQuantityAgainstStock(index) {
     } else {
         quantityInput.classList.remove('invalid');
     }
+    
+    // Make sure the label is properly positioned
+    M.updateTextFields();
 }
 
 /**
@@ -610,6 +616,9 @@ function addDrugToForm(drugData) {
             const event = new Event('input', { bubbles: true });
             quantityInput.dispatchEvent(event);
             
+            // Make sure the label is properly positioned
+            M.updateTextFields();
+            
             // Update the item's data attributes
             const row = quantityInput.closest('.sale-item-row');
             if (row) {
@@ -655,6 +664,9 @@ function addDrugToForm(drugData) {
                 
                 // Update the select with Materialize
                 M.FormSelect.init(drugSelect);
+                
+                // Activate the quantity input label (this fixes the label being stuck on the value)
+                M.updateTextFields();
                 
                 // Store data in the row for calculations
                 const row = drugSelect.closest('.sale-item-row');
