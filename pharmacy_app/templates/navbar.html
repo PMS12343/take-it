@@ -104,7 +104,7 @@
     {% endif %}
     
     <li><div class="divider"></div></li>
-    <li><a href="{% url 'profile' %}"><i class="material-icons">settings</i>Settings</a></li>
+    <li><a href="{% url 'profile' %}"><i class="material-icons">settings</i>Settings {% if user.profile.dark_mode %}<span class="new badge blue darken-2" data-badge-caption="Dark Mode"></span>{% endif %}</a></li>
     <li><a href="{% url 'logout' %}"><i class="material-icons">exit_to_app</i>Logout</a></li>
 </ul>
 

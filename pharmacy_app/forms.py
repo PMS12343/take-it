@@ -50,9 +50,10 @@ class UserProfileForm(forms.ModelForm):
     """Form for user profile"""
     class Meta:
         model = UserProfile
-        fields = ['role']
+        fields = ['role', 'dark_mode']
         widgets = {
-            'role': forms.Select(attrs={'class': 'form-control'})
+            'role': forms.Select(attrs={'class': 'form-control'}),
+            'dark_mode': forms.CheckboxInput(attrs={'class': 'filled-in'})
         }
 
 class DrugCategoryForm(forms.ModelForm):

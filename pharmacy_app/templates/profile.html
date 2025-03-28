@@ -48,6 +48,29 @@
                 
                 <div class="row">
                     <div class="col s12">
+                        <h5>Preferences</h5>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="switch">
+                                <label>
+                                    Light Mode
+                                    <input type="checkbox" name="dark_mode" id="dark_mode_toggle" {% if user.profile.dark_mode %}checked{% endif %}>
+                                    <span class="lever"></span>
+                                    Dark Mode
+                                </label>
+                            </div>
+                            <button type="submit" class="btn waves-effect waves-light green darken-2 mt-3" style="margin-top: 20px;">
+                                Save Preferences
+                                <i class="material-icons right">save</i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="divider" style="margin: 20px 0;"></div>
+                
+                <div class="row">
+                    <div class="col s12">
                         <h5>Change Password</h5>
                         <p class="grey-text">
                             To change your password, please go to 
