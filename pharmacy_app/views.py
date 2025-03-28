@@ -27,9 +27,23 @@ def truncate_field(value, max_length):
 
 def create_safe_invoice_item(invoice, name, brand, quantity, price, **kwargs):
     """Create invoice item with proper field truncation to prevent database errors"""
+    # Add debug logging
+    print(f"Creating invoice item with: name={name}, brand={brand}, quantity={quantity}, price={price}")
+    
+    # Make sure name is never None, use a default value if it is
+    if name is None:
+        name = "Unknown Item"
+        print(f"Name was None, using default: {name}")
+    
     # Truncate text fields to fit database column limits
-    safe_name = truncate_field(name, 495) if name else None  # 500 char limit - buffer
+    safe_name = truncate_field(name, 495)  # 500 char limit - buffer
     safe_brand = truncate_field(brand, 250) if brand else None  # 255 char limit - buffer
+    
+    # Make sure quantity and price are also not None
+    quantity = quantity if quantity is not None else "1"
+    price = price if price is not None else "0.00"
+    
+    print(f"Final values: name={safe_name}, brand={safe_brand}, quantity={quantity}, price={price}")
     
     # Create and return the invoice item
     return InvoiceItem.objects.create(
