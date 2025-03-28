@@ -73,7 +73,7 @@
                         <div class="card-panel center-align">
                             <i class="material-icons medium blue-text">attach_money</i>
                             <h5>Total Revenue</h5>
-                            <h3>${{ total_revenue|floatformat:2 }}</h3>
+                            <h3>{{ total_revenue|floatformat:2 }} IQD</h3>
                             <p>Generated revenue</p>
                         </div>
                     </div>
@@ -82,7 +82,7 @@
                         <div class="card-panel center-align">
                             <i class="material-icons medium orange-text">equalizer</i>
                             <h5>Average Sale</h5>
-                            <h3>${{ avg_sale_value|floatformat:2 }}</h3>
+                            <h3>{{ avg_sale_value|floatformat:2 }} IQD</h3>
                             <p>Average transaction value</p>
                         </div>
                     </div>
@@ -140,7 +140,7 @@
                                 <tr>
                                     <td>{{ drug.drug_name }}</td>
                                     <td>{{ drug.total_quantity }}</td>
-                                    <td>${{ drug.total_value|floatformat:2 }}</td>
+                                    <td>{{ drug.total_value|floatformat:2 }} IQD</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -195,7 +195,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ sale.item_count }}</td>
-                            <td>${{ sale.total_amount|floatformat:2 }}</td>
+                            <td>{{ sale.total_amount|floatformat:2 }} IQD</td>
                             <td>{{ sale.payment_method }}</td>
                             <td>
                                 <a href="{% url 'sale_detail' sale.id %}" class="btn-floating btn-small waves-effect waves-light tooltipped" data-position="top" data-tooltip="View Details">
@@ -243,7 +243,7 @@ $(document).ready(function() {
                 borderWidth: 1,
                 yAxisID: 'y'
             }, {
-                label: 'Revenue ($)',
+                label: 'Revenue (IQD)',
                 data: [
                     {% for day in daily_sales %}
                     {{ day.total }},
@@ -281,12 +281,12 @@ $(document).ready(function() {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return '$' + value;
+                            return value + ' IQD';
                         }
                     },
                     title: {
                         display: true,
-                        text: 'Revenue ($)'
+                        text: 'Revenue (IQD)'
                     }
                 }
             }
@@ -347,7 +347,7 @@ $(document).ready(function() {
                             }, 0);
                             var currentValue = dataset.data[context.dataIndex];
                             var percentage = Math.floor(((currentValue/total) * 100)+0.5);
-                            return context.label + ': $' + currentValue.toFixed(2) + ' (' + percentage + '%)';
+                            return context.label + ': ' + currentValue.toFixed(2) + ' IQD (' + percentage + '%)';
                         }
                     }
                 },

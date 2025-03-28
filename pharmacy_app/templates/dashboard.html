@@ -37,7 +37,7 @@
         <div class="card info-card">
             <div class="card-content">
                 <span class="info-card-title">Today's Sales</span>
-                <p class="info-card-value">${{ today_sales|floatformat:2 }}</p>
+                <p class="info-card-value">{{ today_sales|floatformat:2 }} IQD</p>
                 <p class="grey-text">Revenue today</p>
             </div>
             <div class="card-action">
@@ -50,7 +50,7 @@
         <div class="card info-card">
             <div class="card-content">
                 <span class="info-card-title">Monthly Sales</span>
-                <p class="info-card-value">${{ month_sales|floatformat:2 }}</p>
+                <p class="info-card-value">{{ month_sales|floatformat:2 }} IQD</p>
                 <p class="grey-text">Revenue this month</p>
             </div>
             <div class="card-action">
@@ -173,7 +173,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ sale.date|date:"M d, Y H:i" }}</td>
-                            <td>${{ sale.total_amount|floatformat:2 }}</td>
+                            <td>{{ sale.total_amount|floatformat:2 }} IQD</td>
                         </tr>
                         {% endfor %}
                     </tbody>

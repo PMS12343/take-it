@@ -92,7 +92,7 @@
                     <div class="col s12 center-align">
                         <div class="card-panel">
                             <h5>Total Stock Value</h5>
-                            <h3>${{ total_stock_value|floatformat:2 }}</h3>
+                            <h3>{{ total_stock_value|floatformat:2 }} IQD</h3>
                             <p>Based on cost price</p>
                         </div>
                     </div>
@@ -293,12 +293,12 @@
                             <td class="{% if drug.stock_quantity == 0 %}red-text{% elif drug.is_low_stock %}orange-text{% else %}green-text{% endif %}">
                                 {{ drug.stock_quantity }}
                             </td>
-                            <td>${{ drug.cost_price|floatformat:2 }}</td>
-                            <td>${{ drug.selling_price|floatformat:2 }}</td>
+                            <td>{{ drug.cost_price|floatformat:2 }} IQD</td>
+                            <td>{{ drug.selling_price|floatformat:2 }} IQD</td>
                             <td class="{% if drug.is_expired %}red-text{% elif drug.is_expiring_soon %}orange-text{% endif %}">
                                 {{ drug.expiry_date|date:"M d, Y" }}
                             </td>
-                            <td>${{ drug.stock_quantity|multiply:drug.cost_price|floatformat:2 }}</td>
+                            <td>{{ drug.stock_quantity|multiply:drug.cost_price|floatformat:2 }} IQD</td>
                         </tr>
                         {% endfor %}
                     </tbody>

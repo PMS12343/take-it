@@ -149,8 +149,8 @@
                                 <i class="material-icons tiny">warning</i>
                                 {% endif %}
                             </td>
-                            <td>${{ drug.cost_price|floatformat:2 }}</td>
-                            <td>${{ drug.selling_price|floatformat:2 }}</td>
+                            <td>{{ drug.cost_price|floatformat:2 }} IQD</td>
+                            <td>{{ drug.selling_price|floatformat:2 }} IQD</td>
                             <td class="{% if drug.is_expired %}red-text{% elif drug.is_expiring_soon %}orange-text{% endif %}">
                                 {{ drug.expiry_date|date:"M d, Y" }}
                                 {% if drug.is_expiring_soon and not drug.is_expired %}

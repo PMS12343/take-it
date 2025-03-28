@@ -119,7 +119,7 @@
                         <div class="input-field col s12 m6 l3">
                             <i class="material-icons prefix">attach_money</i>
                             {{ form.cost_price }}
-                            <label for="{{ form.cost_price.id_for_label }}" {% if form.cost_price.value %}class="active"{% endif %}>Cost Price ($)</label>
+                            <label for="{{ form.cost_price.id_for_label }}" {% if form.cost_price.value %}class="active"{% endif %}>Cost Price (IQD)</label>
                             {% if form.cost_price.errors %}
                                 <span class="red-text">{{ form.cost_price.errors.0 }}</span>
                             {% endif %}
@@ -128,7 +128,7 @@
                         <div class="input-field col s12 m6 l3">
                             <i class="material-icons prefix">monetization_on</i>
                             {{ form.selling_price }}
-                            <label for="{{ form.selling_price.id_for_label }}" {% if form.selling_price.value %}class="active"{% endif %}>Selling Price ($)</label>
+                            <label for="{{ form.selling_price.id_for_label }}" {% if form.selling_price.value %}class="active"{% endif %}>Selling Price (IQD)</label>
                             {% if form.selling_price.errors %}
                                 <span class="red-text">{{ form.selling_price.errors.0 }}</span>
                             {% endif %}

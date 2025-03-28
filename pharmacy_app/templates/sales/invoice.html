@@ -160,8 +160,8 @@
                                 <td>{{ forloop.counter }}</td>
                                 <td>{{ item.drug_name }}</td>
                                 <td class="center-align">{{ item.quantity }}</td>
-                                <td class="right-align">${{ item.price|floatformat:2 }}</td>
-                                <td class="right-align">${{ item.total_price|floatformat:2 }}</td>
+                                <td class="right-align">{{ item.price|floatformat:2 }} IQD</td>
+                                <td class="right-align">{{ item.total_price|floatformat:2 }} IQD</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -176,19 +176,19 @@
                                 <tbody>
                                     <tr>
                                         <th>Subtotal:</th>
-                                        <td class="right-align">${{ sale.subtotal|floatformat:2 }}</td>
+                                        <td class="right-align">{{ sale.subtotal|floatformat:2 }} IQD</td>
                                     </tr>
                                     <tr>
                                         <th>Tax:</th>
-                                        <td class="right-align">${{ sale.tax|floatformat:2 }}</td>
+                                        <td class="right-align">{{ sale.tax|floatformat:2 }} IQD</td>
                                     </tr>
                                     <tr>
                                         <th>Discount:</th>
-                                        <td class="right-align">${{ sale.discount|floatformat:2 }}</td>
+                                        <td class="right-align">{{ sale.discount|floatformat:2 }} IQD</td>
                                     </tr>
                                     <tr>
                                         <th><strong>TOTAL:</strong></th>
-                                        <td class="right-align"><strong>${{ sale.total_amount|floatformat:2 }}</strong></td>
+                                        <td class="right-align"><strong>{{ sale.total_amount|floatformat:2 }} IQD</strong></td>
                                     </tr>
                                 </tbody>
                             </table>

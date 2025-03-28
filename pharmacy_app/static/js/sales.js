@@ -160,12 +160,12 @@ function updateDrugInfo(data, index) {
     
     // Update the info card
     itemInfo.querySelector('.stock-qty').textContent = data.available_stock;
-    itemInfo.querySelector('.unit-price').textContent = data.price.toFixed(2);
+    itemInfo.querySelector('.unit-price').textContent = data.price.toFixed(2) + ' IQD';
     
     // Calculate subtotal based on quantity
     const quantity = parseInt(quantityInput.value) || 0;
     const subtotal = quantity * data.price;
-    itemInfo.querySelector('.subtotal').textContent = subtotal.toFixed(2);
+    itemInfo.querySelector('.subtotal').textContent = subtotal.toFixed(2) + ' IQD';
     
     // Show the info card
     itemInfo.style.display = 'block';
@@ -195,7 +195,7 @@ function updateItemSubtotal(index) {
     const price = parseFloat(row.dataset.price);
     const subtotal = quantity * price;
     
-    itemInfo.querySelector('.subtotal').textContent = subtotal.toFixed(2);
+    itemInfo.querySelector('.subtotal').textContent = subtotal.toFixed(2) + ' IQD';
 }
 
 /**
@@ -281,10 +281,10 @@ function updateTotalCalculation() {
     const total = subtotal + tax - discount;
     
     // Update summary display
-    document.getElementById('summary-subtotal').textContent = subtotal.toFixed(2);
-    document.getElementById('summary-tax').textContent = tax.toFixed(2);
-    document.getElementById('summary-discount').textContent = discount.toFixed(2);
-    document.getElementById('summary-total').textContent = total.toFixed(2);
+    document.getElementById('summary-subtotal').textContent = subtotal.toFixed(2) + ' IQD';
+    document.getElementById('summary-tax').textContent = tax.toFixed(2) + ' IQD';
+    document.getElementById('summary-discount').textContent = discount.toFixed(2) + ' IQD';
+    document.getElementById('summary-total').textContent = total.toFixed(2) + ' IQD';
 }
 
 /**
@@ -565,8 +565,8 @@ function addDrugToForm(drugData) {
                 const itemInfo = row.querySelector('.item-info');
                 if (itemInfo) {
                     itemInfo.querySelector('.stock-qty').textContent = drugData.available_stock;
-                    itemInfo.querySelector('.unit-price').textContent = drugData.price.toFixed(2);
-                    itemInfo.querySelector('.subtotal').textContent = drugData.price.toFixed(2);
+                    itemInfo.querySelector('.unit-price').textContent = drugData.price.toFixed(2) + ' IQD';
+                    itemInfo.querySelector('.subtotal').textContent = drugData.price.toFixed(2) + ' IQD';
                     itemInfo.style.display = 'block';
                 }
                 
