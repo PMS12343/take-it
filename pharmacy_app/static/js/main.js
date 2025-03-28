@@ -222,4 +222,7 @@ function initFormElements() {
     
     const tooltips = document.querySelectorAll('.tooltipped');
     M.Tooltip.init(tooltips);
+    
+    // If we're on the sales page and there's a sales.js script, 
+    // the drug selects will be converted to autocomplete there
 }

@@ -6,6 +6,14 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeSalesForm();
+    
+    // Convert all existing drug select dropdowns to autocomplete fields
+    document.querySelectorAll('.sale-item-row').forEach((row, index) => {
+        const drugSelect = row.querySelector('select[id$="-drug"]');
+        if (drugSelect) {
+            convertToAutocomplete(drugSelect);
+        }
+    });
 });
 
 /**
@@ -124,6 +132,94 @@ function setupItemListeners(index) {
         // Validate quantity against available stock
         if (drugSelect.value) {
             validateQuantityAgainstStock(index);
+        }
+    });
+    
+    // Convert drug select to autocomplete
+    convertToAutocomplete(drugSelect);
+}
+
+/**
+ * Convert a select dropdown to an autocomplete field
+ */
+function convertToAutocomplete(selectElement) {
+    if (!selectElement) return;
+    
+    // Get the parent container for the select
+    const inputField = selectElement.closest('.input-field');
+    if (!inputField) return;
+    
+    // Hide the original Materialize select dropdown
+    const selectWrapper = inputField.querySelector('.select-wrapper');
+    if (selectWrapper) {
+        selectWrapper.style.display = 'none';
+    }
+    
+    // Create autocomplete input
+    const autocompleteInput = document.createElement('input');
+    autocompleteInput.type = 'text';
+    autocompleteInput.className = 'autocomplete';
+    autocompleteInput.id = selectElement.id + '_autocomplete';
+    autocompleteInput.placeholder = 'Type to search drugs...';
+    
+    // Add data attribute to link back to original select
+    autocompleteInput.dataset.targetSelect = selectElement.id;
+    
+    // Insert autocomplete input after the select wrapper
+    if (selectWrapper) {
+        selectWrapper.insertAdjacentElement('afterend', autocompleteInput);
+    } else {
+        // Fallback if select wrapper not found
+        selectElement.insertAdjacentElement('afterend', autocompleteInput);
+    }
+    
+    // Build data object for autocomplete
+    const autocompleteData = {};
+    Array.from(selectElement.options).forEach(option => {
+        if (option.value && option.text) {
+            autocompleteData[option.text] = null; // Format required by Materialize
+        }
+    });
+    
+    // Initialize Materialize autocomplete
+    const instance = M.Autocomplete.init(autocompleteInput, {
+        data: autocompleteData,
+        minLength: 1,
+        onAutocomplete: function(text) {
+            // Find the option with matching text and select it
+            const option = Array.from(selectElement.options).find(opt => opt.text === text);
+            if (option) {
+                selectElement.value = option.value;
+                // Trigger change event to update drug info
+                selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+    });
+    
+    // Add event listener for manual input
+    autocompleteInput.addEventListener('blur', function() {
+        const enteredText = this.value.trim();
+        if (enteredText) {
+            // Try to find a matching option
+            const matchingOption = Array.from(selectElement.options).find(opt => 
+                opt.text.toLowerCase() === enteredText.toLowerCase()
+            );
+            
+            if (matchingOption) {
+                // Select the matching option
+                selectElement.value = matchingOption.value;
+                // Update the input to show the correct casing
+                this.value = matchingOption.text;
+                // Trigger change event
+                selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                // Reset input if no match
+                this.value = '';
+                selectElement.value = '';
+            }
+        } else {
+            // If input is cleared, clear the select too
+            selectElement.value = '';
         }
     });
 }
